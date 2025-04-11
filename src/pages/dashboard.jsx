@@ -62,6 +62,7 @@ import { FileSearch } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RefreshCw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Pen } from "lucide-react";
 
 const WelcomeMsg = ({ dashboardData }) => {
   return (
@@ -106,26 +107,95 @@ const Dashboard = () => {
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [fullHistory, setFullHistory] = useState();
 
+  const evalScoreColor = (score) => {
+    if (score >= 70) {
+      return "bg-green-100 text-green-700";
+    } else if (score >= 50 && score < 70) {
+      return "bg-yellow-100 text-yellow-700";
+    } else {
+      return "bg-red-100 text-red-700";
+    }
+  };
+
   const MapSavedQuizzes = ({ showFullSav }) => {
     const savedQuizzes = dashboardData?.savedQuizzes;
     const totalQuizzes = savedQuizzes.length;
+
+    const Trigger = ({ quiz }) => {
+      return (
+        <AccordionTrigger className="data-[state=open]:bg-blue-50 data-[state=open]:text-blue-900 data-[state=open]:rounded-none px-5 py-4 data-[state=open]:px-5 data-[state=open]:border-b-[1px] whitespace-nowrap overflow-ellipsis" title={quiz.title}>
+          {quiz.title}
+        </AccordionTrigger>
+      );
+    };
+
+    const Content = ({ quiz }) => {
+      return (
+        <AccordionContent className="px-5">
+          <div className="text-gray-500 text-xs font-normal py-2 flex justify-between items-center">
+            <span>Last Saved: {quiz.modifiedAt}</span>
+
+            <button className="text-blue-500 p-2 hover:bg-blue-50  hover:text-gray-900 font-medium flex items-center gap-2 rounded-xl text-xs cursor-pointer">
+              <Pen size={14} />
+              <span>Rename</span>
+            </button>
+          </div>
+
+          {quiz.recentScores.length > 0 && (
+            <>
+              <Label className="text-xs">Recent Scores:</Label>
+              <div className="flex gap-2 my-2">
+                {quiz.recentScores.map((score) => {
+                  return (
+                    <span
+                    key={score}
+                      className={`${evalScoreColor(
+                        score
+                      )} px-2 py-1 text-xs rounded-2xl font-medium border-green-200 border-[1px]`}
+                    >
+                      {score}%
+                    </span>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          <Separator className="mb-2" />
+          <div className="flex flex-col sm:grid sm:grid-cols-[4fr_0.3fr_1.2fr] lg:grid-cols-[4fr_0.5fr_1.5fr]  place-items-center">
+            <Button className="w-full bg-blue-600 text-white py-2 hover:bg-blue-700 cursor-pointer text-xs">
+              <RefreshCw /> Retake Quiz
+            </Button>
+            <Separator className="my-2 sm:hidden" />
+            <Separator orientation="vertical" />
+            <div className="flex gap-2 justify-end sm:justify-between w-full items-center ">
+              <Checkbox id="failed-only" className="cursor-pointer"/>
+              <label
+                htmlFor="failed-only"
+                name="failed-only"
+                className="text-gray-500 text-xs font-normal py-1 cursor-pointer whitespace-nowrap"
+              >
+                Failed Only
+              </label>
+            </div>
+          </div>
+        </AccordionContent>
+      );
+    };
 
     if (!showFullSav) {
       // --- Show Last 5, Most Recent First ---
       const last5Saved = [];
       // Iterate backwards from the end of the array
-      // Stop after 5 items or when we reach the beginning
-      const startIndex = Math.max(0, totalQuizzes - 5); // Calculate where to start slicing or iterating from
+      const startIndex = Math.max(0, totalQuizzes - 5); //
 
-      // Slice the last 5 (or fewer) and reverse them
-      const recentQuizzes = savedQuizzes.slice(startIndex).reverse(); // Gets last 5 and reverses order
+      const recentQuizzes = savedQuizzes.slice(startIndex).reverse();
 
-      // Map the reversed slice to components
       recentQuizzes.forEach((quiz) => {
         const Elems = (
-          <AccordionItem value={quiz.id} key={quiz.id}>
-            <AccordionTrigger>{quiz.title}</AccordionTrigger>
-            <AccordionContent>{quiz.id}</AccordionContent>
+          <AccordionItem value={quiz.id} key={quiz.id} className="w-full">
+            <Trigger quiz={quiz} />
+            <Content quiz={quiz} />
           </AccordionItem>
         );
         last5Saved.push(Elems);
@@ -144,21 +214,21 @@ const Dashboard = () => {
       );
     } else {
       // --- Show All, Most Recent First ---
-      const AllSaved = [...savedQuizzes] // Create a shallow copy
+      const AllSaved = [...savedQuizzes]
         .reverse() // Reverse the copy (most recent is now at index 0)
         .map((quiz) => {
           return (
-            <AccordionItem value={quiz.id} key={quiz.id}>
-              <AccordionTrigger>{quiz.title}</AccordionTrigger>
-              <AccordionContent>{quiz.id}</AccordionContent>
-            </AccordionItem>
+            <AccordionItem value={quiz.id} key={quiz.id} className="w-full">
+            <Trigger quiz={quiz} />
+            <Content quiz={quiz} />
+          </AccordionItem>
           );
         });
 
       return (
         <>
           {AllSaved.length > 0 ? (
-            <ScrollArea className="h-[250px] px-3">
+            <ScrollArea className="h-[250px]">
               <Accordion type="single" collapsible>
                 {AllSaved}
               </Accordion>
@@ -173,16 +243,52 @@ const Dashboard = () => {
 
   const MapQuizHistory = ({ showfullHist }) => {
     const quizHistory = dashboardData?.quizHistory;
-    
-    const evalScoreColor = (score) => {
-      if (score >= 70) {
-        return "bg-green-500 text-green-900"
-      } else if (score >=50 && score < 70) {
-        return "bg-yellow-500 text-yellow-900"
-      } else {
-        return "bg-red-500 text-red-900"
-      }
-    }
+
+    const Content = ({ quiz }) => {
+      return (
+        <AccordionContent className="px-5 data-[state=open]:p-5">
+          <p className="text-gray-500 text-xs font-normal py-4 data-[state=open]:p-5">
+            Taken on: {quiz.modifiedAt}
+          </p>
+          <Separator className="mb-2" />
+          <div className="flex flex-col sm:grid sm:grid-cols-[4fr_0.3fr_1.2fr] lg:grid-cols-[4fr_0.5fr_1.5fr] place-items-center">
+            <Button className="w-full bg-blue-600 text-white py-2 hover:bg-blue-700 cursor-pointer text-xs">
+              <RefreshCw /> Retake Quiz
+            </Button>
+            <Separator className="my-2 sm:hidden" />
+            <Separator orientation="vertical" />
+            <div className="flex justify-end lg:justify-between w-full items-center gap-2">
+              <Checkbox id="failed-only" className="cursor-pointer"/>
+              <label
+                htmlFor="failed-only"
+                name="failed-only"
+                className="text-gray-500 text-xs font-normal py-1 cursor-pointer whitespace-nowrap"
+              >
+                Failed Only
+              </label>
+            </div>
+          </div>
+          
+        </AccordionContent>
+      );
+    };
+
+    const Trigger = ({ quiz }) => {
+      return (
+        <AccordionTrigger className="data-[state=open]:bg-blue-50 data-[state=open]:text-blue-900 data-[state=open]:rounded-none px-5 py-4 data-[state=open]:px-5 data-[state=open]:border-b-[1px] grid grid-cols-[9fr_0.5fr] items-center" title={quiz.title}>
+          <div className="flex justify-between min-w-0">
+            <span className="!truncate">{quiz.title}</span>
+            <span
+              className={`${evalScoreColor(
+                quiz.score
+              )} py-1 px-3 rounded-md text-xs`}
+            >
+              {quiz.score}%
+            </span>
+          </div>
+        </AccordionTrigger>
+      );
+    };
 
     if (!showfullHist) {
       const lastFiveHistoryComponents = quizHistory
@@ -190,37 +296,8 @@ const Dashboard = () => {
         .reverse() // Reverse their order (most recent first)
         .map((quiz) => (
           <AccordionItem value={quiz.id} key={quiz.id} className="w-full">
-            <AccordionTrigger className="data-[state=open]:bg-blue-50 data-[state=open]:text-blue-900 data-[state=open]:rounded-none px-5 py-4 data-[state=open]:px-5 data-[state=open]:border-b-[1px]">
-              {quiz.title}
-              <div className={`${evalScoreColor(quiz.score)} p-3 rounded-md`}>
-                {quiz.score}
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-5 data-[state=open]:p-5">
-              <p className="text-gray-500 text-xs font-normal py-4 data-[state=open]:p-5">
-                Taken on: {quiz.modifiedAt}
-              </p>
-              <Separator className="mb-2" />
-              <div className="sm:grid sm:grid-cols-[4fr_0.5fr_1.5fr] place-items-center">
-              <Button className="w-full bg-blue-600 text-white py-5 hover:bg-blue-700 cursor-pointer text-sm">
-                <RefreshCw /> Retake Quiz
-              </Button>
-              <Separator className="my-2 sm:hidden" />
-              <Separator orientation="vertical" />
-              <div className="flex justify-between w-full items-center">
-                <Checkbox id="failed-only mr-2" />
-                <label
-                  htmlFor="failed-only"
-                  name="failed-only"
-                  className="text-gray-500 text-xs font-normal py-1 "
-                >
-                  Failed Only
-                </label>
-
-              </div>
-
-              </div>
-            </AccordionContent>
+            <Trigger quiz={quiz} />
+            <Content quiz={quiz} />
           </AccordionItem>
         ));
 
@@ -236,41 +313,14 @@ const Dashboard = () => {
         </>
       );
     } else {
-      const AllHistoryComponents = [...quizHistory] // Create a copy
+      const AllHistoryComponents = [...quizHistory] 
         .reverse()
         .map((quiz) => {
           return (
             <AccordionItem value={quiz.id} key={quiz.id} className="w-full">
-            <AccordionTrigger className="data-[state=open]:bg-blue-50 data-[state=open]:text-blue-900 data-[state=open]:rounded-none px-5 py-4 data-[state=open]:px-5 data-[state=open]:border-b-[1px]">
-              {quiz.title}
-              
-            </AccordionTrigger>
-            <AccordionContent className="px-5 data-[state=open]:p-5">
-              <p className="text-gray-500 text-xs font-normal py-4 data-[state=open]:p-5">
-                Taken on: {quiz.modifiedAt}
-              </p>
-              <Separator className="mb-2" />
-              <div className="sm:grid sm:grid-cols-[4fr_0.5fr_1.5fr] place-items-center">
-              <Button className="w-full bg-blue-600 text-white py-5 hover:bg-blue-700 cursor-pointer text-sm">
-                <RefreshCw /> Retake Quiz
-              </Button>
-              <Separator className="my-2 sm:hidden" />
-              <Separator orientation="vertical" />
-              <div className="flex justify-between w-full items-center">
-                <Checkbox id="failed-only mr-2" />
-                <label
-                  htmlFor="failed-only"
-                  name="failed-only"
-                  className="text-gray-500 text-xs font-normal py-1 "
-                >
-                  Failed Only
-                </label>
-
-              </div>
-
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+              <Trigger quiz={quiz} />
+              <Content quiz={quiz} />
+            </AccordionItem>
           );
         });
 
@@ -981,7 +1031,7 @@ const Dashboard = () => {
                 {isLoading ? (
                   ""
                 ) : (
-                  <CardContent className={showFullSaved && "px-3"}>
+                  <CardContent className="px-0">
                     {!dashboardData.savedQuizzes.length ? (
                       <NoSavedQuiz />
                     ) : showFullSaved ? (
@@ -1026,7 +1076,7 @@ const Dashboard = () => {
 
               {/* History */}
               <Card>
-                <CardHeader className="bg-purple-50 p-5">
+                <CardHeader className="bg-purple-50 py-5">
                   <CardTitle className="font-medium  text-purple-800 flex items-center justify-between">
                     Quiz History
                     <Save size={16} className="text-purple-600" />
