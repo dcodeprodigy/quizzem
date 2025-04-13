@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import AppLogo from "@/components/applogo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { InfoIcon, Settings, UploadCloud } from "lucide-react";
 import { User } from "lucide-react";
@@ -78,15 +79,7 @@ const WelcomeMsg = ({ dashboardData }) => {
   );
 };
 
-const AppLogo = () => {
-  return (
-    <>
-      <p className="font-bold text-blue-600 text-2xl md:text-3xl cursor-default">
-        QUIZZEM
-      </p>
-    </>
-  );
-};
+
 
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
