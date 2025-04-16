@@ -409,6 +409,11 @@ const QuizPage = ({ isExam }) => {
             }
         })
         quizData.questions = shuffledQuestionOptions; // replace non-shuffled with shuffled
+
+        // shuffle questions order
+        const shuffledQuestions = shuffleArray(quizData.questions);
+        console.log("order shuffled",shuffledQuestions);
+        quizData.questions = shuffledQuestions
         setQuizData(quizData);
 
         const userReq = await axios.get("/mock/dashboard.json");
@@ -423,7 +428,7 @@ const QuizPage = ({ isExam }) => {
         const initialQuizState = Array.from(
           { length: quizData.questions.length },
           (_, index) => ({
-            questionId: index + 1,
+            questionId: quizData.questions[index].questionId, // set id to that from backend(randomid)
             selectedAnswer: null,
             correctAnswer: null,
             checkAnswerDisabled: true,
@@ -695,7 +700,7 @@ const QuizPage = ({ isExam }) => {
                                 quizState[currentQuestion - 1].isCorrect
                                   ? "text-green-600 bg-green-50 border-green-200"
                                   : "text-red-600 bg-red-50 border-red-200"
-                              } font-semibold px-3 py-2 text-sm rounded-md  border `}
+                              } font-semibold px-3 py-2 text-sm rounded-md  border md:hidden`}
                             >
                               {quizState[currentQuestion - 1].isCorrect ? (
                                 <CircleCheck size={18} />
@@ -755,7 +760,7 @@ const QuizPage = ({ isExam }) => {
                           %
                         </CardTitle>
                         <CardDescription className="text-sm text-gray-600">
-                          You got {scoreCount} answer correct
+                          You got {scoreCount} answer{scoreCount > 1 && "s"} correct
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="p-0 overflow-y-auto relative">

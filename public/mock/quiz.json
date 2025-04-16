@@ -1,254 +1,239 @@
 {
-    "quizId": "mammary-gland-quiz-001",
-    "createdAt": {
-      "$date": "2024-01-01T00:00:00.000Z"
+  "quizId": "mammary-gland-quiz-001",
+  "createdAt": {
+    "$date": "2024-01-01T00:00:00.000Z"
+  },
+  "modifiedAt": {
+    "$date": "2024-01-01T00:00:00.000Z"
+  },
+  "title": "Mammary Gland Quiz",
+  "questions": [
+    {
+      "questionId": "F3dK",
+      "question": "What is the primary blood supply of the mammary gland?",
+      "options": [
+        "Internal thoracic artery",
+        "Axillary artery",
+        "Thoracodorsal artery",
+        "Subclavian artery"
+      ]
     },
-    "modifiedAt": {
-      "$date": "2024-01-01T00:00:00.000Z"
+    {
+      "questionId": "r9Vz",
+      "question": "Which lymph nodes receive the majority of lymphatic drainage from the breast?",
+      "options": [
+        "Axillary lymph nodes",
+        "Parasternal lymph nodes",
+        "Supraclavicular lymph nodes",
+        "Inguinal lymph nodes"
+      ]
     },
-    "title": "Mammary Gland Quiz",
-    "questions": [
-      {
-        "questionId": "1",
-        "question": "What is the primary blood supply of the mammary gland?",
-        "options": [
-          "Internal thoracic artery",
-          "Axillary artery",
-          "Thoracodorsal artery",
-          "Subclavian artery"
-        ]
-      },
-      {
-        "questionId": "2",
-        "question": "Which lymph nodes receive the majority of lymphatic drainage from the breast?",
-        "options": [
-          "Axillary lymph nodes",
-          "Parasternal lymph nodes",
-          "Supraclavicular lymph nodes",
-          "Inguinal lymph nodes"
-        ]
-      },
-      {
-        "questionId": "3",
-        "question": "The mammary gland is a modified form of which type of gland?",
-        "options": [
-          "Sebaceous gland",
-          "Apocrine sweat gland",
-          "Endocrine gland",
-          "Eccrine sweat gland"
-        ]
-      },
-      {
-        "questionId": "4",
-        "question": "What structure suspends the breast and maintains its shape?",
-        "options": [
-          "Suspensory ligaments of Cooper",
-          "Retinacula cutis",
-          "Pectoral fascia",
-          "Clavipectoral fascia"
-        ]
-      },
-      {
-        "questionId": "5",
-        "question": "What is the primary venous drainage of the mammary gland?",
-        "options": [
-          "Axillary vein",
-          "Internal thoracic vein",
-          "Cephalic vein",
-          "Brachiocephalic vein"
-        ]
-      },
-      {
-        "questionId": "6",
-        "question": "Which hormone is primarily responsible for milk production in the mammary gland?",
-        "options": [
-          "Oxytocin",
-          "Progesterone",
-          "Prolactin",
-          "Estrogen"
-        ]
-      },
-      {
-        "questionId": "7",
-        "question": "Which hormone triggers milk ejection from the mammary gland?",
-        "options": [
-          "Prolactin",
-          "Estrogen",
-          "Oxytocin",
-          "Progesterone"
-        ]
-      },
-      {
-        "questionId": "8",
-        "question": "What embryonic layer gives rise to the mammary gland?",
-        "options": [
-          "Ectoderm",
-          "Mesoderm",
-          "Endoderm",
-          "Neural crest"
-        ]
-      },
-      {
-        "questionId": "9",
-        "question": "What anatomical landmark is used to describe the location of the nipple?",
-        "options": [
-          "4th intercostal space",
-          "5th intercostal space",
-          "Midclavicular line",
-          "Sternal border"
-        ]
-      },
-      {
-        "questionId": "10",
-        "question": "Which nerve supplies sensation to the nipple?",
-        "options": [
-          "Intercostal nerve (T4)",
-          "Phrenic nerve",
-          "Thoracodorsal nerve",
-          "Lateral pectoral nerve"
-        ]
-      },
-      {
-        "questionId": "11",
-        "question": "What is the clinical significance of the 'Peau d'orange' appearance in breast cancer?",
-        "options": [
-          "Indicates lymphatic obstruction",
-          "Benign fibroadenoma",
-          "Infection of mammary ducts",
-          "Sign of normal breast changes"
-        ]
-      },
-      {
-        "questionId": "12",
-        "question": "Which structure separates the mammary gland from the pectoralis major muscle?",
-        "options": [
-          "Retromammary space",
-          "Cooper's ligaments",
-          "Lateral thoracic fascia",
-          "Axillary sheath"
-        ]
-      },
-      {
-        "questionId": "13",
-        "question": "During mastectomy, which nerve is at risk of injury, leading to winging of the scapula?",
-        "options": [
-          "Long thoracic nerve",
-          "Axillary nerve",
-          "Musculocutaneous nerve",
-          "Thoracodorsal nerve"
-        ]
-      },
-      {
-        "questionId": "14",
-        "question": "What is the function of the Montgomery glands in the areola?",
-        "options": [
-          "Lubricate the nipple",
-          "Produce milk",
-          "Provide pigmentation",
-          "Stimulate lactation"
-        ]
-      },
-      {
-        "questionId": "15",
-        "question": "Which quadrant of the breast has the highest incidence of breast cancer?",
-        "options": [
-          "Upper outer quadrant",
-          "Lower outer quadrant",
-          "Upper inner quadrant",
-          "Lower inner quadrant"
-        ]
-      }
-    ],
-    "answers": [
-      {
-        "questionId": "1",
-        "correctAnswer": "Internal thoracic artery",
-        "userSelectedAnswer": null,
-        "explanation": "The internal thoracic artery provides the major blood supply to the mammary gland."
-      },
-      {
-        "questionId": "2",
-        "correctAnswer": "Axillary lymph nodes",
-        "userSelectedAnswer": null,
-        "explanation": "About 75% of the lymph from the breast drains into the axillary lymph nodes."
-      },
-      {
-        "questionId": "3",
-        "correctAnswer": "Apocrine sweat gland",
-        "userSelectedAnswer": null,
-        "explanation": "The mammary gland is a modified apocrine sweat gland."
-      },
-      {
-        "questionId": "4",
-        "correctAnswer": "Suspensory ligaments of Cooper",
-        "userSelectedAnswer": null,
-        "explanation": "The suspensory ligaments of Cooper provide structural support to the breast."
-      },
-      {
-        "questionId": "5",
-        "correctAnswer": "Axillary vein",
-        "userSelectedAnswer": null,
-        "explanation": "The axillary vein receives most of the venous drainage from the mammary gland."
-      },
-      {
-        "questionId": "6",
-        "correctAnswer": "Prolactin",
-        "userSelectedAnswer": null,
-        "explanation": "Prolactin stimulates milk production in the mammary gland."
-      },
-      {
-        "questionId": "7",
-        "correctAnswer": "Oxytocin",
-        "userSelectedAnswer": null,
-        "explanation": "Oxytocin stimulates the contraction of myoepithelial cells, leading to milk ejection."
-      },
-      {
-        "questionId": "8",
-        "correctAnswer": "Ectoderm",
-        "userSelectedAnswer": null,
-        "explanation": "The mammary gland develops from the ectoderm."
-      },
-      {
-        "questionId": "9",
-        "correctAnswer": "4th intercostal space",
-        "userSelectedAnswer": null,
-        "explanation": "The nipple is typically located at the level of the 4th intercostal space."
-      },
-      {
-        "questionId": "10",
-        "correctAnswer": "Intercostal nerve (T4)",
-        "userSelectedAnswer": null,
-        "explanation": "The intercostal nerve (T4) provides sensory innervation to the nipple."
-      },
-      {
-        "questionId": "11",
-        "correctAnswer": "Indicates lymphatic obstruction",
-        "userSelectedAnswer": null,
-        "explanation": "Peau d'orange is caused by lymphatic obstruction, leading to skin dimpling."
-      },
-      {
-        "questionId": "12",
-        "correctAnswer": "Retromammary space",
-        "userSelectedAnswer": null,
-        "explanation": "The retromammary space allows movement of the breast over the pectoralis major muscle."
-      },
-      {
-        "questionId": "13",
-        "correctAnswer": "Long thoracic nerve",
-        "userSelectedAnswer": null,
-        "explanation": "The long thoracic nerve supplies the serratus anterior, and its injury causes scapular winging."
-      },
-      {
-        "questionId": "14",
-        "correctAnswer": "Lubricate the nipple",
-        "userSelectedAnswer": null,
-        "explanation": "Montgomery glands secrete lubricating substances to protect the nipple during breastfeeding."
-      },
-      {
-        "questionId": "15",
-        "correctAnswer": "Upper outer quadrant",
-        "userSelectedAnswer": null,
-        "explanation": "The upper outer quadrant has the highest incidence of breast cancer due to the high density of glandular tissue."
-      }
-    ]
-  }
+    {
+      "questionId": "PqA7",
+      "question": "The mammary gland is a modified form of which type of gland?",
+      "options": [
+        "Sebaceous gland",
+        "Apocrine sweat gland",
+        "Endocrine gland",
+        "Eccrine sweat gland"
+      ]
+    },
+    {
+      "questionId": "Zx3H",
+      "question": "What structure suspends the breast and maintains its shape?",
+      "options": [
+        "Suspensory ligaments of Cooper",
+        "Retinacula cutis",
+        "Pectoral fascia",
+        "Clavipectoral fascia"
+      ]
+    },
+    {
+      "questionId": "KM72",
+      "question": "What is the primary venous drainage of the mammary gland?",
+      "options": [
+        "Axillary vein",
+        "Internal thoracic vein",
+        "Cephalic vein",
+        "Brachiocephalic vein"
+      ]
+    },
+    {
+      "questionId": "xBqN",
+      "question": "Which hormone is primarily responsible for milk production in the mammary gland?",
+      "options": ["Oxytocin", "Progesterone", "Prolactin", "Estrogen"]
+    },
+    {
+      "questionId": "NcH2",
+      "question": "Which hormone triggers milk ejection from the mammary gland?",
+      "options": ["Prolactin", "Estrogen", "Oxytocin", "Progesterone"]
+    },
+    {
+      "questionId": "7XzA",
+      "question": "What embryonic layer gives rise to the mammary gland?",
+      "options": ["Ectoderm", "Mesoderm", "Endoderm", "Neural crest"]
+    },
+    {
+      "questionId": "bWk5",
+      "question": "What anatomical landmark is used to describe the location of the nipple?",
+      "options": [
+        "4th intercostal space",
+        "5th intercostal space",
+        "Midclavicular line",
+        "Sternal border"
+      ]
+    },
+    {
+      "questionId": "t83J",
+      "question": "Which nerve supplies sensation to the nipple?",
+      "options": [
+        "Intercostal nerve (T4)",
+        "Phrenic nerve",
+        "Thoracodorsal nerve",
+        "Lateral pectoral nerve"
+      ]
+    },
+    {
+      "questionId": "Y62w",
+      "question": "What is the clinical significance of the 'Peau d'orange' appearance in breast cancer?",
+      "options": [
+        "Indicates lymphatic obstruction",
+        "Benign fibroadenoma",
+        "Infection of mammary ducts",
+        "Sign of normal breast changes"
+      ]
+    },
+    {
+      "questionId": "sLfQ",
+      "question": "Which structure separates the mammary gland from the pectoralis major muscle?",
+      "options": [
+        "Retromammary space",
+        "Cooper's ligaments",
+        "Lateral thoracic fascia",
+        "Axillary sheath"
+      ]
+    },
+    {
+      "questionId": "DR8t",
+      "question": "During mastectomy, which nerve is at risk of injury, leading to winging of the scapula?",
+      "options": [
+        "Long thoracic nerve",
+        "Axillary nerve",
+        "Musculocutaneous nerve",
+        "Thoracodorsal nerve"
+      ]
+    },
+    {
+      "questionId": "zKpM",
+      "question": "What is the function of the Montgomery glands in the areola?",
+      "options": [
+        "Lubricate the nipple",
+        "Produce milk",
+        "Provide pigmentation",
+        "Stimulate lactation"
+      ]
+    },
+    {
+      "questionId": "AQ72",
+      "question": "Which quadrant of the breast has the highest incidence of breast cancer?",
+      "options": [
+        "Upper outer quadrant",
+        "Lower outer quadrant",
+        "Upper inner quadrant",
+        "Lower inner quadrant"
+      ]
+    }
+  ],
+  "answers": [
+    {
+      "questionId": "F3dK",
+      "correctAnswer": "Internal thoracic artery",
+      "userSelectedAnswer": null,
+      "explanation": "The internal thoracic artery provides the major blood supply to the mammary gland."
+    },
+    {
+      "questionId": "r9Vz",
+      "correctAnswer": "Axillary lymph nodes",
+      "userSelectedAnswer": null,
+      "explanation": "About 75% of the lymph from the breast drains into the axillary lymph nodes."
+    },
+    {
+      "questionId": "PqA7",
+      "correctAnswer": "Apocrine sweat gland",
+      "userSelectedAnswer": null,
+      "explanation": "The mammary gland is a modified apocrine sweat gland."
+    },
+    {
+      "questionId": "Zx3H",
+      "correctAnswer": "Suspensory ligaments of Cooper",
+      "userSelectedAnswer": null,
+      "explanation": "The suspensory ligaments of Cooper provide structural support to the breast."
+    },
+    {
+      "questionId": "KM72",
+      "correctAnswer": "Axillary vein",
+      "userSelectedAnswer": null,
+      "explanation": "The axillary vein receives most of the venous drainage from the mammary gland."
+    },
+    {
+      "questionId": "xBqN",
+      "correctAnswer": "Prolactin",
+      "userSelectedAnswer": null,
+      "explanation": "Prolactin stimulates milk production in the mammary gland."
+    },
+    {
+      "questionId": "NcH2",
+      "correctAnswer": "Oxytocin",
+      "userSelectedAnswer": null,
+      "explanation": "Oxytocin stimulates the contraction of myoepithelial cells, leading to milk ejection."
+    },
+    {
+      "questionId": "7XzA",
+      "correctAnswer": "Ectoderm",
+      "userSelectedAnswer": null,
+      "explanation": "The mammary gland develops from the ectoderm."
+    },
+    {
+      "questionId": "bWk5",
+      "correctAnswer": "4th intercostal space",
+      "userSelectedAnswer": null,
+      "explanation": "The nipple is typically located at the level of the 4th intercostal space."
+    },
+    {
+      "questionId": "t83J",
+      "correctAnswer": "Intercostal nerve (T4)",
+      "userSelectedAnswer": null,
+      "explanation": "The intercostal nerve (T4) provides sensory innervation to the nipple."
+    },
+    {
+      "questionId": "Y62w",
+      "correctAnswer": "Indicates lymphatic obstruction",
+      "userSelectedAnswer": null,
+      "explanation": "Peau d'orange is caused by lymphatic obstruction, leading to skin dimpling."
+    },
+    {
+      "questionId": "sLfQ",
+      "correctAnswer": "Retromammary space",
+      "userSelectedAnswer": null,
+      "explanation": "The retromammary space allows movement of the breast over the pectoralis major muscle."
+    },
+    {
+      "questionId": "DR8t",
+      "correctAnswer": "Long thoracic nerve",
+      "userSelectedAnswer": null,
+      "explanation": "The long thoracic nerve supplies the serratus anterior, and its injury causes scapular winging."
+    },
+    {
+      "questionId": "zKpM",
+      "correctAnswer": "Lubricate the nipple",
+      "userSelectedAnswer": null,
+      "explanation": "Montgomery glands secrete lubricating substances to protect the nipple during breastfeeding."
+    },
+    {
+      "questionId": "AQ72",
+      "correctAnswer": "Upper outer quadrant",
+      "userSelectedAnswer": null,
+      "explanation": "The upper outer quadrant has the highest incidence of breast cancer due to the high density of glandular tissue."
+    }
+  ]
+}

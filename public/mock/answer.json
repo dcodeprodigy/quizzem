@@ -1,95 +1,95 @@
 {
     "answers": [
-      {
-        "questionId": "1",
-        "correctAnswer": "Internal thoracic artery",
-        "userSelectedAnswer": null,
-        "explanation": "The internal thoracic artery provides the major blood supply to the mammary gland."
-      },
-      {
-        "questionId": "2",
-        "correctAnswer": "Axillary lymph nodes",
-        "userSelectedAnswer": null,
-        "explanation": "About 75% of the lymph from the breast drains into the axillary lymph nodes."
-      },
-      {
-        "questionId": "3",
-        "correctAnswer": "Apocrine sweat gland",
-        "userSelectedAnswer": null,
-        "explanation": "The mammary gland is a modified apocrine sweat gland."
-      },
-      {
-        "questionId": "4",
-        "correctAnswer": "Suspensory ligaments of Cooper",
-        "userSelectedAnswer": null,
-        "explanation": "The suspensory ligaments of Cooper provide structural support to the breast."
-      },
-      {
-        "questionId": "5",
-        "correctAnswer": "Axillary vein",
-        "userSelectedAnswer": null,
-        "explanation": "The axillary vein receives most of the venous drainage from the mammary gland."
-      },
-      {
-        "questionId": "6",
-        "correctAnswer": "Prolactin",
-        "userSelectedAnswer": null,
-        "explanation": "Prolactin stimulates milk production in the mammary gland."
-      },
-      {
-        "questionId": "7",
-        "correctAnswer": "Oxytocin",
-        "userSelectedAnswer": null,
-        "explanation": "Oxytocin stimulates the contraction of myoepithelial cells, leading to milk ejection."
-      },
-      {
-        "questionId": "8",
-        "correctAnswer": "Ectoderm",
-        "userSelectedAnswer": null,
-        "explanation": "The mammary gland develops from the ectoderm."
-      },
-      {
-        "questionId": "9",
-        "correctAnswer": "4th intercostal space",
-        "userSelectedAnswer": null,
-        "explanation": "The nipple is typically located at the level of the 4th intercostal space."
-      },
-      {
-        "questionId": "10",
-        "correctAnswer": "Intercostal nerve (T4)",
-        "userSelectedAnswer": null,
-        "explanation": "The intercostal nerve (T4) provides sensory innervation to the nipple."
-      },
-      {
-        "questionId": "11",
-        "correctAnswer": "Indicates lymphatic obstruction",
-        "userSelectedAnswer": null,
-        "explanation": "Peau d'orange is caused by lymphatic obstruction, leading to skin dimpling."
-      },
-      {
-        "questionId": "12",
-        "correctAnswer": "Retromammary space",
-        "userSelectedAnswer": null,
-        "explanation": "The retromammary space allows movement of the breast over the pectoralis major muscle."
-      },
-      {
-        "questionId": "13",
-        "correctAnswer": "Long thoracic nerve",
-        "userSelectedAnswer": null,
-        "explanation": "The long thoracic nerve supplies the serratus anterior, and its injury causes scapular winging."
-      },
-      {
-        "questionId": "14",
-        "correctAnswer": "Lubricate the nipple",
-        "userSelectedAnswer": null,
-        "explanation": "Montgomery glands secrete lubricating substances to protect the nipple during breastfeeding."
-      },
-      {
-        "questionId": "15",
-        "correctAnswer": "Upper outer quadrant",
-        "userSelectedAnswer": null,
-        "explanation": "The upper outer quadrant has the highest incidence of breast cancer due to the high density of glandular tissue."
-      }
-    ]
+    {
+      "questionId": "F3dK",
+      "correctAnswer": "Internal thoracic artery",
+      "userSelectedAnswer": null,
+      "explanation": "The internal thoracic artery provides the major blood supply to the mammary gland."
+    },
+    {
+      "questionId": "r9Vz",
+      "correctAnswer": "Axillary lymph nodes",
+      "userSelectedAnswer": null,
+      "explanation": "About 75% of the lymph from the breast drains into the axillary lymph nodes."
+    },
+    {
+      "questionId": "PqA7",
+      "correctAnswer": "Apocrine sweat gland",
+      "userSelectedAnswer": null,
+      "explanation": "The mammary gland is a modified apocrine sweat gland."
+    },
+    {
+      "questionId": "Zx3H",
+      "correctAnswer": "Suspensory ligaments of Cooper",
+      "userSelectedAnswer": null,
+      "explanation": "The suspensory ligaments of Cooper provide structural support to the breast."
+    },
+    {
+      "questionId": "KM72",
+      "correctAnswer": "Axillary vein",
+      "userSelectedAnswer": null,
+      "explanation": "The axillary vein receives most of the venous drainage from the mammary gland."
+    },
+    {
+      "questionId": "xBqN",
+      "correctAnswer": "Prolactin",
+      "userSelectedAnswer": null,
+      "explanation": "Prolactin stimulates milk production in the mammary gland."
+    },
+    {
+      "questionId": "NcH2",
+      "correctAnswer": "Oxytocin",
+      "userSelectedAnswer": null,
+      "explanation": "Oxytocin stimulates the contraction of myoepithelial cells, leading to milk ejection."
+    },
+    {
+      "questionId": "7XzA",
+      "correctAnswer": "Ectoderm",
+      "userSelectedAnswer": null,
+      "explanation": "The mammary gland develops from the ectoderm."
+    },
+    {
+      "questionId": "bWk5",
+      "correctAnswer": "4th intercostal space",
+      "userSelectedAnswer": null,
+      "explanation": "The nipple is typically located at the level of the 4th intercostal space."
+    },
+    {
+      "questionId": "t83J",
+      "correctAnswer": "Intercostal nerve (T4)",
+      "userSelectedAnswer": null,
+      "explanation": "The intercostal nerve (T4) provides sensory innervation to the nipple."
+    },
+    {
+      "questionId": "Y62w",
+      "correctAnswer": "Indicates lymphatic obstruction",
+      "userSelectedAnswer": null,
+      "explanation": "Peau d'orange is caused by lymphatic obstruction, leading to skin dimpling."
+    },
+    {
+      "questionId": "sLfQ",
+      "correctAnswer": "Retromammary space",
+      "userSelectedAnswer": null,
+      "explanation": "The retromammary space allows movement of the breast over the pectoralis major muscle."
+    },
+    {
+      "questionId": "DR8t",
+      "correctAnswer": "Long thoracic nerve",
+      "userSelectedAnswer": null,
+      "explanation": "The long thoracic nerve supplies the serratus anterior, and its injury causes scapular winging."
+    },
+    {
+      "questionId": "zKpM",
+      "correctAnswer": "Lubricate the nipple",
+      "userSelectedAnswer": null,
+      "explanation": "Montgomery glands secrete lubricating substances to protect the nipple during breastfeeding."
+    },
+    {
+      "questionId": "AQ72",
+      "correctAnswer": "Upper outer quadrant",
+      "userSelectedAnswer": null,
+      "explanation": "The upper outer quadrant has the highest incidence of breast cancer due to the high density of glandular tissue."
+    }
+  ]
   }
   
