@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
+import { shuffleArray } from "@/utils/random";
 import { motion } from "framer-motion";
 import LoadingDots from "@/components/loading-dots";
 import { Button } from "@/components/ui/button";
@@ -152,9 +152,9 @@ const QuizPage = ({ isExam }) => {
               ...prevQuizState,
               disableAskAi: false,
               explanation: response.data.explanation,
-              correctAnswer: response.data.correctAnswer, // TODO : replace with answer from backend
+              correctAnswer: "Internal thoracic artery", // TODO : replace with answer from backend
               isCorrect:
-              response.data.correctAnswer == quizState[currentQuestion - 1].selectedAnswer
+              "Internal thoracic artery" == quizState[currentQuestion - 1].selectedAnswer
                   ? true
                   : false,
             };
@@ -358,6 +358,8 @@ const QuizPage = ({ isExam }) => {
       );
     });
 
+    
+
     console.log(quizState);
     return MappedOptions;
   };
@@ -397,6 +399,16 @@ const QuizPage = ({ isExam }) => {
         if (quizReq.status !== 200) return setLoadingError(true); // so that user can retry
         const quizData = quizReq.data;
         console.log(quizData);
+
+        // shuffle options
+        const shuffledQuestionOptions = quizData.questions.map(question => {
+            const shuffledOptions = shuffleArray(question.options); // shuffle options
+            return {
+                ...question,
+                options: shuffledOptions
+            }
+        })
+        quizData.questions = shuffledQuestionOptions; // replace non-shuffled with shuffled
         setQuizData(quizData);
 
         const userReq = await axios.get("/mock/dashboard.json");
