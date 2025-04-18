@@ -160,9 +160,8 @@ const Dashboard = () => {
             <Button className="w-full bg-blue-600 text-white py-2 hover:bg-blue-700 cursor-pointer text-xs">
               <RefreshCw /> Retake Quiz
             </Button>
-            <Separator className="my-2 sm:hidden" />
             <Separator orientation="vertical" />
-            <div className="flex gap-2 justify-end sm:justify-between w-full items-center ">
+            <div className="flex gap-2 justify-end sm:justify-between w-full items-center mt-2.5 sm:mt-0">
               <Checkbox id="failed-only" className="cursor-pointer" />
               <label
                 htmlFor="failed-only"
@@ -249,9 +248,8 @@ const Dashboard = () => {
             <Button className="w-full bg-blue-600 text-white py-2 hover:bg-blue-700 cursor-pointer text-xs">
               <RefreshCw /> Retake Quiz
             </Button>
-            <Separator className="my-2 sm:hidden" />
             <Separator orientation="vertical" />
-            <div className="flex justify-end lg:justify-between w-full items-center gap-2">
+            <div className="flex justify-end lg:justify-between w-full items-center gap-2 mt-2.5 sm:mt-0">
               <Checkbox id="failed-only" className="cursor-pointer" />
               <label
                 htmlFor="failed-only"
