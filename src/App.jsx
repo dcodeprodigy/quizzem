@@ -13,8 +13,10 @@ function App() {
         <Route path="/signup" element={<SignupPage/>}/>
         <Route path="/login" element={<LoginPage/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
-        <Route path="/quiz/e/:id" element={<QuizPage isExam={true}/>}/>
-        <Route path="/quiz/s/:id" element={<QuizPage isExam={false}/>}/>
+        {/* exam mode */}
+        <Route path="/quiz/e/:id" element={<QuizPage isExam={true}/>}/> 
+        {/* study mode */}
+        <Route path="/quiz/s/:id" element={<QuizPage isExam={false}/>}/> 
         <Route path="/" element={<Dashboard />}/>
       </Routes>
     </Router>

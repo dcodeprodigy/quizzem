@@ -58,7 +58,7 @@ const QuizPage = ({ isExam }) => {
   const [disableButtons, setDisableButtons] = useState(true);
   const [scoreCount, setScoreCount] = useState(0);
   const quizCard = useRef(null);
-  const [submitConfirm, setSubmitConfirm] = useState(false);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0)
 
   const scrollIntoView = (Elem) => {
     // Scroll an element into view
@@ -67,6 +67,31 @@ const QuizPage = ({ isExam }) => {
       block: "start",
     });
   };
+
+  const completeScoreSentence = () => {
+    if (isExam) {
+        const percentageDone = (questionsAnswered/quizState.length) * 100
+        return percentageDone.toFixed(1)
+    }
+
+  }
+
+  const calculateQA = (data) => {
+    console.log("data", data)
+    // On Mount, run this function, just in case the user is trying to continue a quiz
+    data.questions.map(question => {
+        question.selectedAnswer && setQuestionsAnswered(questionsAnswered + 1);
+    })
+
+    console.log("ans", questionsAnswered)
+  }
+
+  const calculatePercentCorrect = () => {
+    return (
+        (scoreCount / quizData.questions.length) *
+        100
+      ).toFixed(1) + "%"
+  }
 
   const SubmitConfirmation = () => {
     return (
@@ -112,82 +137,84 @@ const QuizPage = ({ isExam }) => {
   };
 
   const checkAnswer = async () => {
-    setDisableButtons(true);
-    setIsRequesting(true);
-    // Disable check answer button
-    const mutateQuestionState = (disable) => {
-      setQuizState((prevQuizState) => {
-        return prevQuizState.map((questionItem, index) => {
-          if (index === currentQuestion - 1) {
-            return {
-              ...questionItem,
-              checkAnswerDisabled: disable,
-            };
-          } else return questionItem;
-        });
-      });
-    };
+    if(!isExam) {
+        setDisableButtons(true);
+        setIsRequesting(true);
+        // Disable check answer button
+        const mutateQuestionState = (disable) => {
+          setQuizState((prevQuizState) => {
+            return prevQuizState.map((questionItem, index) => {
+              if (index === currentQuestion - 1) {
+                return {
+                  ...questionItem,
+                  checkAnswerDisabled: disable,
+                };
+              } else return questionItem;
+            });
+          });
+        };
+    
+        mutateQuestionState(true);
+    
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          // Server shall pass only the answer for that particular question ONLY!!!. For now, check answer function may not work.
+        //   const response = await axios.get(
+        //     `/quiz/s/${quizId}/a/${currentQuestion - 1})`
+    
+            const response = await axios.get('/mock/answer.json'); // Get the answer
+          if (!response.status == 200) {
+            return mutateQuestionState(false);
+          } // Show toast error message (when connecting backend)
+    
+          // Set correct answer to quizState
+          setQuizState((prevQuizStates) => {
+            //prevQuizStates is the array of quizState
+            return prevQuizStates.map((prevQuizState, index) => {
+              // prevQuizState is the OBJECT at that index
+              if (index === currentQuestion - 1) {
+                // if current index matches that of current question, mutate the explanation and correctAnswer to reflect the fetched data. Then compare both answer selected and correct one
+                return {
+                  ...prevQuizState,
+                  disableAskAi: false,
+                  explanation: response.data.explanation,
+                  correctAnswer: "Internal thoracic artery", // TODO : replace with answer from backend
+                  isCorrect:
+                  "Internal thoracic artery" == quizState[currentQuestion - 1].selectedAnswer
+                      ? true
+                      : false,
+                };
+              } else return prevQuizState;
+            });
+          });
+    
+          quizState.map((questionState) => {
+            // Increment the scoreCount as appropriate
+            questionState.isCorrect && setScoreCount(scoreCount + 1);
+          });
+        } catch (error) {
+          console.log(error);
+          // re-enable check answer button if there is an error
+          mutateQuestionState(false);
+          // show toast here too
+        } finally {
+          setDisableButtons(false);
+          setIsRequesting(false);
+        }
 
-    mutateQuestionState(true);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      // Server shall pass only the answer for that particular question ONLY!!!. For now, check answer function may not work.
-    //   const response = await axios.get(
-    //     `/quiz/s/${quizId}/a/${currentQuestion - 1})`
-
-        const response = await axios.get('/mock/answer.json'); // Get the answer
-      if (!response.status == 200) {
-        return mutateQuestionState(false);
-      } // Show toast error message (when connecting backend)
-
-      // Set correct answer to quizState
-      setQuizState((prevQuizStates) => {
-        //prevQuizStates is the array of quizState
-        return prevQuizStates.map((prevQuizState, index) => {
-          // prevQuizState is the OBJECT at that index
-          if (index === currentQuestion - 1) {
-            // if current index matches that of current question, mutate the explanation and correctAnswer to reflect the fetched data. Then compare both answer selected and correct one
-            return {
-              ...prevQuizState,
-              disableAskAi: false,
-              explanation: response.data.explanation,
-              correctAnswer: "Internal thoracic artery", // TODO : replace with answer from backend
-              isCorrect:
-              "Internal thoracic artery" == quizState[currentQuestion - 1].selectedAnswer
-                  ? true
-                  : false,
-            };
-          } else return prevQuizState;
-        });
-      });
-
-      quizState.map((questionState) => {
-        // Increment the scoreCount as appropriate
-        questionState.isCorrect && setScoreCount(scoreCount + 1);
-      });
-    } catch (error) {
-      console.log(error);
-      // re-enable check answer button if there is an error
-      mutateQuestionState(false);
-      // show toast here too
-    } finally {
-      setDisableButtons(false);
-      setIsRequesting(false);
-    }
-  };
-
-  const updateAskAiField = (newValue) => {
-    setQuizState((prevQuizState) => {
-      return prevQuizState.map((questionState, index) => {
-        if (index === currentQuestion - 1) {
-          return {
-            ...questionState,
-            askAiField: newValue,
-          };
-        } else return questionState;
-      });
-    });
+        const updateAskAiField = (newValue) => {
+          setQuizState((prevQuizState) => {
+            return prevQuizState.map((questionState, index) => {
+              if (index === currentQuestion - 1) {
+                return {
+                  ...questionState,
+                  askAiField: newValue,
+                };
+              } else return questionState;
+            });
+          });
+      }
+      }
   };
 
   const state = [
@@ -266,6 +293,10 @@ const QuizPage = ({ isExam }) => {
               ? () => {
                   // This means only run this onClick function when we are not requesting and there is no correctAnswer in state
                   console.log(quizState);
+
+                  // Update questions answered state before updating selectedAnswer
+                  !quizState[currentQuestion - 1].selectedAnswer && setQuestionsAnswered(questionsAnswered + 1);
+
                   // Set as selected answer in state
                   setQuizState((prevQuizState) => {
                     return prevQuizState.map((questionState, index) => {
@@ -279,6 +310,7 @@ const QuizPage = ({ isExam }) => {
                     });
                   });
                   setDisableButtons(false);
+
                 }
               : undefined
           }
@@ -439,6 +471,8 @@ const QuizPage = ({ isExam }) => {
           })
         );
         setQuizState(initialQuizState);
+        // check how many questions user has answered
+        isExam ? calculateQA(quizData) : undefined
       } catch (error) {
         console.error(error);
         setLoadingError(true);
@@ -446,6 +480,8 @@ const QuizPage = ({ isExam }) => {
     };
 
     fetchData();
+    // Set 
+    
   }, [loadingError]);
 
   return (
@@ -478,7 +514,7 @@ const QuizPage = ({ isExam }) => {
                         variant="secondary"
                         className="text-red-500 p-3 cursor-pointer text-sm"
                       >
-                        End Quiz
+                        End {isExam? "Exam" : "Quiz"}
                       </Button>
                       <div className="flex flex-col items-center justify-center">
                         <p className="font-medium text-gray-700">
@@ -568,7 +604,7 @@ const QuizPage = ({ isExam }) => {
                       )}
 
                       {/* Switch Section for Ask AI */}
-                      <div className="flex items-center my-6 space-x-2">
+                      {!isExam &&  <div className="flex items-center my-6 space-x-2">
                         <Switch
                           id="ask-ai"
                           size={16}
@@ -605,7 +641,8 @@ const QuizPage = ({ isExam }) => {
                         >
                           Ask AI Follow-up
                         </Label>
-                      </div>
+                      </div>}
+                     
                       {/* The Input for asking AI */}
                       {/* <motion.div
                               initial={{ opacity: 0, height: 0 }}
@@ -649,7 +686,8 @@ const QuizPage = ({ isExam }) => {
                           </motion.div>
                         )}
 
-                      <Separator className="hidden sm:block" />
+                      {!isExam && <Separator className="hidden sm:block" />}
+                      
 
                       {/* Mobile Switch for Questions */}
                       <div className="flex justify-between bg-white fixed bottom-0 left-0 w-full px-3 py-3 shadow-2xl md:bg-transparent md:relative md:shadow-none z-50">
@@ -676,7 +714,7 @@ const QuizPage = ({ isExam }) => {
                         </Button>
 
                         {/* Check Answer */}
-                        {!quizState[currentQuestion - 1].correctAnswer ? (
+                        {!quizState[currentQuestion - 1].correctAnswer && !isExam ? (
                           <Button
                             className="bg-blue-600 not-disabled:cursor-pointer"
                             disabled={
@@ -690,7 +728,9 @@ const QuizPage = ({ isExam }) => {
                             {isRequesting ? <LoadingDots /> : "Check Answer"}
                           </Button>
                         ) : (
-                          <motion.div
+                            <>
+                            {/* Only show this if correctAnswer becomes available. It is necessary to do it this way because of the exam mode displaying correct answers in the end */}
+                            {quizState[currentQuestion - 1].correctAnswer && <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
@@ -713,7 +753,8 @@ const QuizPage = ({ isExam }) => {
                                   : "Incorrect."}
                               </span>
                             </div>
-                          </motion.div>
+                          </motion.div>}
+                         </> 
                         )}
 
                         {/* Next Button */}
@@ -753,14 +794,13 @@ const QuizPage = ({ isExam }) => {
                     <Card className="p-5 md:sticky md:top-0 h-[90vh]">
                       <CardHeader className="flex flex-col justify-center items-center p-4 bg-blue-50 border border-blue-200 rounded-lg text-center gap-1">
                         <CardTitle className="text-3xl font-bold text-blue-700">
-                          {(
-                            (scoreCount / quizData.questions.length) *
-                            100
-                          ).toFixed(1)}
-                          %
+                            {/* This should display the number of questions answered when in exam mode */}
+                            {isExam ? `${questionsAnswered}/${quizState.length}` : calculatePercentCorrect()}
+                          
                         </CardTitle>
                         <CardDescription className="text-sm text-gray-600">
-                          You got {scoreCount} answer{scoreCount > 1 && "s"} correct
+                            {isExam ? `You are ${completeScoreSentence()}% complete` : `You got ${scoreCount} answer${scoreCount > 1 ? "s" : ""} correct`}
+                          
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="p-0 overflow-y-auto relative">

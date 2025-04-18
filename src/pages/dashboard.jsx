@@ -79,8 +79,6 @@ const WelcomeMsg = ({ dashboardData }) => {
   );
 };
 
-
-
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingFail, setLoadingFail] = useState(false);
@@ -116,7 +114,10 @@ const Dashboard = () => {
 
     const Trigger = ({ quiz }) => {
       return (
-        <AccordionTrigger className="data-[state=open]:bg-blue-50 data-[state=open]:text-blue-900 data-[state=open]:rounded-none px-5 py-4 data-[state=open]:px-5 data-[state=open]:border-b-[1px] whitespace-nowrap overflow-ellipsis" title={quiz.title}>
+        <AccordionTrigger
+          className="data-[state=open]:bg-blue-50 data-[state=open]:text-blue-900 data-[state=open]:rounded-none px-5 py-4 data-[state=open]:px-5 data-[state=open]:border-b-[1px] whitespace-nowrap overflow-ellipsis"
+          title={quiz.title}
+        >
           {quiz.title}
         </AccordionTrigger>
       );
@@ -141,7 +142,7 @@ const Dashboard = () => {
                 {quiz.recentScores.map((score) => {
                   return (
                     <span
-                    key={score}
+                      key={score}
                       className={`${evalScoreColor(
                         score
                       )} px-2 py-1 text-xs rounded-2xl font-medium border-green-200 border-[1px]`}
@@ -162,7 +163,7 @@ const Dashboard = () => {
             <Separator className="my-2 sm:hidden" />
             <Separator orientation="vertical" />
             <div className="flex gap-2 justify-end sm:justify-between w-full items-center ">
-              <Checkbox id="failed-only" className="cursor-pointer"/>
+              <Checkbox id="failed-only" className="cursor-pointer" />
               <label
                 htmlFor="failed-only"
                 name="failed-only"
@@ -212,9 +213,9 @@ const Dashboard = () => {
         .map((quiz) => {
           return (
             <AccordionItem value={quiz.id} key={quiz.id} className="w-full">
-            <Trigger quiz={quiz} />
-            <Content quiz={quiz} />
-          </AccordionItem>
+              <Trigger quiz={quiz} />
+              <Content quiz={quiz} />
+            </AccordionItem>
           );
         });
 
@@ -251,7 +252,7 @@ const Dashboard = () => {
             <Separator className="my-2 sm:hidden" />
             <Separator orientation="vertical" />
             <div className="flex justify-end lg:justify-between w-full items-center gap-2">
-              <Checkbox id="failed-only" className="cursor-pointer"/>
+              <Checkbox id="failed-only" className="cursor-pointer" />
               <label
                 htmlFor="failed-only"
                 name="failed-only"
@@ -261,14 +262,16 @@ const Dashboard = () => {
               </label>
             </div>
           </div>
-          
         </AccordionContent>
       );
     };
 
     const Trigger = ({ quiz }) => {
       return (
-        <AccordionTrigger className="data-[state=open]:bg-blue-50 data-[state=open]:text-blue-900 data-[state=open]:rounded-none px-5 py-4 data-[state=open]:px-5 data-[state=open]:border-b-[1px] grid grid-cols-[9fr_0.5fr] items-center" title={quiz.title}>
+        <AccordionTrigger
+          className="data-[state=open]:bg-blue-50 data-[state=open]:text-blue-900 data-[state=open]:rounded-none px-5 py-4 data-[state=open]:px-5 data-[state=open]:border-b-[1px] grid grid-cols-[9fr_0.5fr] items-center"
+          title={quiz.title}
+        >
           <div className="flex justify-between min-w-0">
             <span className="!truncate">{quiz.title}</span>
             <span
@@ -306,16 +309,14 @@ const Dashboard = () => {
         </>
       );
     } else {
-      const AllHistoryComponents = [...quizHistory] 
-        .reverse()
-        .map((quiz) => {
-          return (
-            <AccordionItem value={quiz.id} key={quiz.id} className="w-full">
-              <Trigger quiz={quiz} />
-              <Content quiz={quiz} />
-            </AccordionItem>
-          );
-        });
+      const AllHistoryComponents = [...quizHistory].reverse().map((quiz) => {
+        return (
+          <AccordionItem value={quiz.id} key={quiz.id} className="w-full">
+            <Trigger quiz={quiz} />
+            <Content quiz={quiz} />
+          </AccordionItem>
+        );
+      });
 
       return (
         <>
@@ -740,6 +741,7 @@ const Dashboard = () => {
                         </p>
                       )}
                       <Input
+                        name="fileId"
                         id="file-dropzone"
                         type="file"
                         className="hidden"
@@ -782,6 +784,7 @@ const Dashboard = () => {
                         </Label>
 
                         <ToggleGroup
+                          name="difficulty"
                           id="difficulty-group"
                           type="multiple"
                           value={difficultyValue}
@@ -839,6 +842,7 @@ const Dashboard = () => {
                         </Label>
 
                         <ToggleGroup
+                          name="mode"
                           id="mode-group"
                           type="multiple"
                           value={modeValue}
@@ -877,7 +881,7 @@ const Dashboard = () => {
                       <div className="mt-5">
                         <Label
                           className="flex flex-col items-start"
-                          htmlFor="no-of-questions"
+                          htmlFor="noOfQuestions"
                         >
                           <div className="text-gray-700 flex items-center gap-3 mb-3">
                             <span>Number of Questions</span>
@@ -899,12 +903,13 @@ const Dashboard = () => {
                             </TooltipProvider>
                           </div>
                           <Select
+                            name="noOfQuestions"
                             value={noOfQuestions}
                             onChange={(e) => setNoOfQuestions(e.current.value)}
                           >
                             <SelectTrigger
                               className="max-w-[135px] w-[135px] !text-gray-700"
-                              id="no-of-questions"
+                              id="noOfQuestions"
                             >
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
@@ -964,15 +969,15 @@ const Dashboard = () => {
                             >
                               <Label
                                 className={`text-gray-700 transition-all ease-in-out transform duration-300`}
-                                htmlFor="TimeLimit"
+                                htmlFor="timeLimit"
                               >
                                 <Input
+                                  name="timeLimit"
                                   id="timeLimit"
                                   value={timeLimit}
                                   min="1"
                                   max="150"
                                   type="number"
-                                  name="timeLimit"
                                   className="max-w-[135px] w-[135px] text-sm"
                                   onChange={(e) => validateTimeLimit(e)}
                                 />
@@ -989,6 +994,7 @@ const Dashboard = () => {
                         Additional Instructions (Optional)
                       </Label>
                       <Textarea
+                        name="additionalInfo"
                         id="additionalInfo"
                         className="text-sm"
                         placeholder="e.g., Test me on premise and assertion-type questions, Compare concepts X and Y, Ask strictly clinical correlations..."
