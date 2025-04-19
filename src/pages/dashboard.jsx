@@ -42,12 +42,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
@@ -61,11 +55,6 @@ import { CirclePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileSearch } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { RefreshCw } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Pen } from "lucide-react";
 
 const WelcomeMsg = ({ dashboardData }) => {
   return (
@@ -100,13 +89,6 @@ const Dashboard = () => {
   const [showFullHistory, setShowFullHistory] = useState(false);
 
 
-  
-
-  
-
-  
-
-  
 
   // Drag and Drop Handlers
   const handleDragOver = (event) => {
@@ -209,6 +191,7 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  
   return (
     <>
       <div className="w-full max-w-full bg-gradient-to-b from-gray-50 to-blue-50 ">

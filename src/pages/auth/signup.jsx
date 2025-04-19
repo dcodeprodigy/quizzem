@@ -1,9 +1,12 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useRef, useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Slider from "../../components/slider"
+import Slider from "../../components/slider";
+import axios from "axios";
+import { Label } from "@/components/ui/label";
+import { ToastContainer, toast, Flip } from 'react-toastify';
 
 
 const Tags = () => {
@@ -24,7 +27,102 @@ const LeftSection = () => {
   );
 };
 
+function displayLoadingToast(msg) {
+  return toast.loading(msg, {
+    position: "bottom-center",
+    autoClose: false,
+    hideProgressBar: false,
+    closeOnClick: false,
+    pauseOnHover: false,
+    draggable: true,
+    progress: undefined,
+    theme: "colored",
+    transition: Flip,
+  });
+}
+
 const SignupPage = () => {
+  const navigate = useNavigate();
+  const formRef = useRef();
+  const [errors, setErrors] = useState({
+    fName: "",
+    lName: "",
+    email: "",
+    password: "",
+  });
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [formState, setFormState] = useState({
+    fName: "",
+    lName: "",
+    email: "",
+    password: "",
+  });
+
+  const triggerSignup = async (e) => {
+    e.preventDefault();
+    let toastId;
+    
+
+    try {
+      toastId = displayLoadingToast("Hang tight while we sign you up...");
+
+      const response = await axios.post(
+        "http://127.0.0.1:5000/api/auth/signup",
+        {
+          fName: formState.fName,
+          lName: formState.lName,
+          email: formState.email,
+          password: formState.password,
+        }
+      )
+
+      toastId = toast.update(toastId, {
+        render: "Signup successful! Redirecting...",
+        type:"success",
+        isLoading: false,
+        autoClose: 5000
+      });
+
+
+
+      localStorage.setItem("token", response.data.token); // set token
+      await new Promise (resolve => setTimeout(resolve, 2500));
+      navigate("/dashboard");
+
+    } catch (error) {
+      console.log(error)
+      const response = error.response.data;
+      // append errors to state
+      if (response.msgs) {
+
+        toastId = toast.update(toastId, {
+          render: "Input validation failed.",
+          isLoading: false,
+          type: "error",
+          autoClose: 3000
+        });
+
+        response.msgs.map((msg) => {
+          return setErrors((prevErrors) => ({
+            ...prevErrors,
+            [msg.path]: msg.msg,
+          }));
+        });
+      } else {
+        // Toast Notification
+        toastId = toast.update(toastId, {
+          render: response.msg,
+          type: "error",
+          isLoading: false,
+          autoClose: 5000
+        });
+
+      }
+    }
+  };
+
+  
+
   return (
     <>
       <Tags />
@@ -49,7 +147,7 @@ const SignupPage = () => {
               </Button>
             </div>
 
-            <form className="my-5">
+            <form className="my-5" ref={formRef} onSubmit={triggerSignup}>
               <div className="mb-5">
                 <h1 className="font-bold text-3xl text-black max-[930px]:text-[clamp(1.5rem,_1rem_+_2.2vw,_2.2rem)]">
                   Welcome to QUIZZEM
@@ -62,20 +160,66 @@ const SignupPage = () => {
                   Enter Name
                 </label>
                 {/* Name Section */}
-                <div className="flex gap-3 mt-2 mb-4">
-                  <Input
-                    placeholder="First Name"
-                    name="fName"
-                    className="h-11 text-[14px]"
-                  />
-                  <Input
-                    placeholder="Last Name (Optional)"
-                    name="lName"
-                    className="h-11 text-[14px]"
-                  />
+                <div className="flex gap-3 mt-2 mb-4 ">
+                  <div className="flex-1 flex flex-col">
+                    <Input
+                      placeholder="First Name"
+                      name="fName"
+                      className="h-11 text-[14px]"
+                      disabled={isRequesting}
+                      onChange={(e) => {
+                        setFormState((prevState) => ({
+                          ...prevState,
+                          fName: e.target.value,
+                        }));
+                        // Reset error message
+                        setErrors((prevState) => ({
+                          ...prevState,
+                          fName: "",
+                        }));
+                        console.log(formState);
+                      }}
+                    />
+
+                    <Label
+                      className={`text-red-500 text-xs mt-2 ${
+                        errors.fName ? "block" : "hidden"
+                      }`}
+                    >
+                      {errors?.fName}
+                    </Label>
+                  </div>
+
+                  <div className="flex-1 flex flex-col">
+                    <Input
+                      placeholder="Last Name (Optional)"
+                      name="lName"
+                      className="h-11 text-[14px]"
+                      disabled={isRequesting}
+                      onChange={(e) => {
+                        setFormState((prevState) => ({
+                          ...prevState,
+                          lName: e.target.value,
+                        }));
+
+                        // Reset error message
+                        setErrors((prevState) => ({
+                          ...prevState,
+                          lName: "",
+                        }));
+                      }}
+                    />
+                    <Label
+                      className={`text-red-500 text-xs ${
+                        errors.lName ? "block" : "hidden"
+                      }`}
+                    >
+                      {errors?.lName}
+                    </Label>
+                  </div>
                 </div>
 
-                <label htmlFor="email" className="font-medium mt-2">
+                <label htmlFor="email" className="font-medium mt-1">
                   Enter Email
                 </label>
 
@@ -83,8 +227,30 @@ const SignupPage = () => {
                   placeholder="youremail@example.com"
                   name="email"
                   type="email"
-                  className="mb-4 mt-2 h-11 text-[14px]"
+                  className={`mb-4 ${
+                    errors.email && "mb-0"
+                  } mt-2 h-11 text-[14px]`}
+                  disabled={isRequesting}
+                  onChange={(e) => {
+                    setFormState((prevState) => ({
+                      ...prevState,
+                      email: e.target.value,
+                    }));
+                    // Reset error message
+                    setErrors((prevState) => ({
+                      ...prevState,
+                      email: "",
+                    }));
+                  }}
                 />
+
+                <Label
+                  className={`text-red-500 text-xs my-2 ${
+                    errors.email ? "block" : "hidden"
+                  }`}
+                >
+                  {errors?.email}
+                </Label>
 
                 <label htmlFor="setPwd" className="font-medium mt-1">
                   Set Password
@@ -92,25 +258,36 @@ const SignupPage = () => {
                 <Input
                   placeholder="••••••••••••"
                   type="password"
-                  name="setPwd"
+                  name="password"
                   className="mb-4 mt-2 h-11 text-[14px]"
+                  disabled={isRequesting}
+                  onChange={(e) => {
+                    setFormState((prevState) => ({
+                      ...prevState,
+                      password: e.target.value,
+                    }));
+                    // Reset error message
+                    setErrors((prevState) => ({
+                      ...prevState,
+                      password: "",
+                    }));
+                  }}
                 />
 
-                <label htmlFor="confirmPwd" className="font-medium mt-1">
-                  Confirm Password
-                </label>
-                <Input
-                  placeholder="••••••••••••"
-                  type="password"
-                  name="confirmPwd"
-                  className="mb-4 mt-2 h-11 text-[14px]"
-                />
+                <Label
+                  className={`text-red-500 text-xs my-2 ${
+                    errors.password ? "block" : "hidden"
+                  }`}
+                >
+                  {errors?.password}
+                </Label>
               </div>
 
               <Button
                 variant="outline"
                 type="submit"
                 className="bg-blue-600 hover:bg-blue-700 text-white hover:text-white w-full mt-2 h-11 cursor-pointer"
+                disabled={isRequesting}
               >
                 Sign Up
               </Button>
@@ -118,6 +295,7 @@ const SignupPage = () => {
           </section>
         </div>
       </main>
+      <ToastContainer className="text-base"/>
     </>
   );
 };
