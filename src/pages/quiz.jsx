@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import axios from "axios";
-import AppLogo from "@/components/applogo";
+import AppLogo from "@/components/AppLogo";
 import { UserProvider } from "../../context/user";
 import { useParams } from "react-router-dom";
 import {
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { shuffleArray } from "@/utils/random";
 import { motion } from "framer-motion";
-import LoadingDots from "@/components/loading-dots";
+import LoadingDots from "@/components/LoadingDots";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -73,7 +73,6 @@ const QuizPage = ({ isExam }) => {
         const percentageDone = (questionsAnswered/quizState.length) * 100
         return percentageDone.toFixed(1)
     }
-
   }
 
   const calculateQA = (data) => {
@@ -82,8 +81,6 @@ const QuizPage = ({ isExam }) => {
     data.questions.map(question => {
         question.selectedAnswer && setQuestionsAnswered(questionsAnswered + 1);
     })
-
-    console.log("ans", questionsAnswered)
   }
 
   const calculatePercentCorrect = () => {
@@ -202,44 +199,23 @@ const QuizPage = ({ isExam }) => {
           setIsRequesting(false);
         }
 
-        const updateAskAiField = (newValue) => {
-          setQuizState((prevQuizState) => {
-            return prevQuizState.map((questionState, index) => {
-              if (index === currentQuestion - 1) {
-                return {
-                  ...questionState,
-                  askAiField: newValue,
-                };
-              } else return questionState;
-            });
-          });
       }
-      }
-  };
+    };
+  
+  const updateAskAiField = (newValue) => {
+      setQuizState((prevQuizState) => {
+        return prevQuizState.map((questionState, index) => {
+          if (index === currentQuestion - 1) {
+            return {
+              ...questionState,
+              askAiField: newValue,
+            };
+          } else return questionState;
+        });
+      });
+  }
 
-  const state = [
-    {
-      questionId: 0,
-      selectedAnswer: "A",
-      correctAnswer: null,
-      checkAnswerDisabled: true, // default value which will be updated
-      explanation: null,
-      aiConvo: null,
-      showAskAI: false, // Set to true on toggle switch
-      disableAskAi: true, // Set to false when user has checked answer (https). || Set to true when user has not checked answer
-      askAiField: "",
-    },
-    {
-      questionId: 0,
-      selectedAnswer: "A",
-      correctAnswer: null,
-      checkAnswerDisabled: true,
-      explanation: null,
-      aiConvo: null,
-      showAskAI: false,
-      disableAskAi: true,
-    },
-  ];
+ 
 
   const MapOptions = () => {
     const options = quizData["questions"][currentQuestion - 1]["options"];
@@ -259,7 +235,8 @@ const QuizPage = ({ isExam }) => {
         <Button
           key={optionLetter}
           variant="outline"
-          className={`py-7 flex justify-between items-center w-full font-normal border-gray-300 shadow-none  rounded-lg not-disabled:cursor-pointer transition-all duration-500 disabled:cursor-not-allowed ${
+          className={`py-7 flex justify-between items-center w-full font-normal border-gray-300 shadow-none rounded-lg not-disabled:cursor-pointer transition-all duration-500 disabled:cursor-not-allowed 
+          ${
             quizState[currentQuestion - 1]?.selectedAnswer === option &&
             "border-blue-400  bg-blue-50 ring-2 ring-blue-500 ring-offset-1"
           }
@@ -268,25 +245,22 @@ const QuizPage = ({ isExam }) => {
             quizState[currentQuestion - 1]?.isCorrect &&
             "border-green-400 bg-blue-green ring-2 ring-green-500 ring-offset-0"
           }
-
           ${
             quizState[currentQuestion - 1]?.correctAnswer === option &&
-            "border-green-400  bg-green-50 ring-2 ring-green-500 ring-offset-0"
+            "border-green-400 bg-green-50 ring-2 ring-green-500 ring-offset-0"
           }
-
           ${
             quizState[currentQuestion - 1]?.selectedAnswer === option &&
             quizState[currentQuestion - 1].isCorrect === false &&
             "border-red-400  bg-red-50 ring-2 ring-red-500 ring-offset-1"
           }
-
           ${
             quizState[currentQuestion - 1]?.selectedAnswer === option &&
             quizState[currentQuestion - 1].correctAnswer !== null &&
             quizState[currentQuestion - 1].correctAnswer !== option &&
             "border-red-400  bg-red-50 ring-2 ring-red-500 ring-offset-0"
-          }
-          `}
+          }`}
+
           onClick={
             !quizState[currentQuestion - 1].correctAnswer &&
             isRequesting === false
@@ -303,19 +277,20 @@ const QuizPage = ({ isExam }) => {
                       if (index === currentQuestion - 1) {
                         return {
                           ...questionState,
-                          selectedAnswer: option, // use  the actuall option instead. helps to easily shuffle options on initial render without issues of indexing when accessing correct answer
+                          selectedAnswer: option, // use  the actual option instead. helps to easily shuffle options on initial render without issues of indexing when accessing correct answer
                           checkAnswerDisabled: false,
                         };
                       } else return questionState;
                     });
                   });
                   setDisableButtons(false);
-
                 }
               : undefined
           }
         >
+          {/* This div shows the option letter and option */}
           <div className="flex gap-3 items-center">
+
             <span
               // In this classnames we used isCorrect === false and not !isCorrect because a var may be falsy but not false
               className={`w-7 h-7 flex items-center justify-center text-sm rounded-full border-2 border-gray-400 font-medium ${
@@ -327,18 +302,15 @@ const QuizPage = ({ isExam }) => {
               quizState[currentQuestion - 1]?.isCorrect &&
               "bg-green-500 !border-green-500 text-white"
             }
-
             ${
               quizState[currentQuestion - 1]?.correctAnswer === option &&
               "bg-green-500 !border-green-500 text-white"
             }
-
           ${
             quizState[currentQuestion - 1]?.selectedAnswer === option &&
             quizState[currentQuestion - 1].isCorrect === false &&
             "bg-red-500 !border-red-500 text-white"
-          } 
-            `}
+          } `}
             >
               {optionLetter}
             </span>
@@ -352,18 +324,15 @@ const QuizPage = ({ isExam }) => {
               quizState[currentQuestion - 1]?.isCorrect &&
               "font-medium text-green-800"
             }
-
             ${
               quizState[currentQuestion - 1]?.correctAnswer === option &&
               "font-medium text-green-800"
             }
-
           ${
             quizState[currentQuestion - 1]?.selectedAnswer === option &&
             quizState[currentQuestion - 1].isCorrect === false &&
             "font-medium text-red-800"
-          }
-            `}
+          }`}
             >
               {option}
             </span>
@@ -390,7 +359,6 @@ const QuizPage = ({ isExam }) => {
       );
     });
 
-    
 
     console.log(quizState);
     return MappedOptions;
@@ -422,6 +390,8 @@ const QuizPage = ({ isExam }) => {
       </>
     );
   };
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -480,10 +450,11 @@ const QuizPage = ({ isExam }) => {
     };
 
     fetchData();
-    // Set 
+
     
   }, [loadingError]);
 
+  
   return (
     <>
       {loadingError ? (
@@ -665,7 +636,7 @@ const QuizPage = ({ isExam }) => {
                                   placeholder="Ask AI anything about this question..."
                                   className="text-sm"
                                   onChange={(e) =>
-                                    updateAskAiField(e.target.value)
+                                    {updateAskAiField(e.target.value)}
                                   }
                                   value={
                                     quizState[currentQuestion - 1].askAiField

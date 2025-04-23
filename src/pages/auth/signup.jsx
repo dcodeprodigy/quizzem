@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Slider from "../../components/slider";
+import Slider from "../../components/Slider";
 import axios from "axios";
 import { Label } from "@/components/ui/label";
 import { ToastContainer, toast, Flip } from "react-toastify";
@@ -73,7 +73,7 @@ const SignupPage = () => {
       toastId = displayLoadingToast("Hang tight while we sign you up...");
 
       const response = await axios.post(
-        "http://127.0.0.1:5000/api/auth/signup",
+        "http://localhost:5000/api/auth/signup",
         {
           fName: formState.fName,
           lName: formState.lName,

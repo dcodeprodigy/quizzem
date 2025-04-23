@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RefreshCw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import evalScoreColor from "@/utils/evaluateScoreColor";
-import NoQuizHistory from "./noquizhistory";
+import NoQuizHistory from "./NoQuizHistory";
 
 
 const MapQuizHistory = ({ showfullHist, dashboardData }) => {

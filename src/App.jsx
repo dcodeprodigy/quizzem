@@ -5,6 +5,7 @@ import SignupPage from "./pages/auth/signup";
 import LoginPage from "./pages/auth/login";
 import Dashboard from "./pages/dashboard";
 import QuizPage from "./pages/quiz";
+import VerifyAccount from "./pages/auth/verify-account";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Routes>
         <Route path="/signup" element={<SignupPage/>}/>
         <Route path="/login" element={<LoginPage/>}/>
+        <Route path="/verify-account/:token" element={<VerifyAccount/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
         {/* exam mode */}
         <Route path="/quiz/e/:id" element={<QuizPage isExam={true}/>}/> 

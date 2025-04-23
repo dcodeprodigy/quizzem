@@ -8,4 +8,4 @@ const evalScoreColor = (score) => {
     }
   };
 
-  export default evalScoreColor
+export default evalScoreColor;

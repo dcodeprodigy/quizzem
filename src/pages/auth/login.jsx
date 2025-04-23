@@ -5,9 +5,10 @@ import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Slider from "../../components/slider";
+import Slider from "../../components/Slider";
 import { ToastContainer, toast, Flip } from "react-toastify";
 import axios from "axios"
+import LoadingDots from "@/components/LoadingDots";
 
 const Tags = () => {
   return (
@@ -44,12 +45,12 @@ function displayLoadingToast(msg) {
 
 
 const LoginPage = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [errors, setErrors] = useState({
     email: "",
     password: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [formState, setFormState] = useState({
     email: "",
     password: "",
@@ -63,7 +64,7 @@ const LoginPage = () => {
       setIsLoading(true);
       toastId = displayLoadingToast("Logging you in...");
   
-      const response = await axios.post("http://127.0.0.1:5000/api/auth/login", {
+      const response = await axios.post("http://localhost:5000/api/auth/login", {
         email: formState.email,
         password: formState.password,
       });
@@ -75,15 +76,16 @@ const LoginPage = () => {
         autoClose: 5000,
       });
   
-      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("token", response.data?.token);
       await new Promise (resolve => setTimeout(resolve, 2500));
       navigate("/dashboard");
     } catch (error) {
       setIsLoading(false);
       console.log(error);
-      const response = error.response.data;
+      
       // append errors to state
-      if (response.msgs) {
+      if (error?.response?.msgs) {
+        const response = error.response.data;
         toastId = toast.update(toastId, {
           render: "Input validation failed.",
           isLoading: false,
@@ -100,7 +102,7 @@ const LoginPage = () => {
       } else {
         // Toast Notification
         toastId = toast.update(toastId, {
-          render: response.msg,
+          render: error?.response?.msg || error?.data?.msg || error?.response?.statusText || "Unknown error",
           type: "error",
           isLoading: false,
           autoClose: 5000,
@@ -131,8 +133,9 @@ const LoginPage = () => {
                 variant="outline"
                 className="text-black bg-white outline-1 cursor-pointer"
                 size="sm"
+                onClick={() => navigate("/signup")}
               >
-                <Link to="/Signup">Signup</Link>
+                Signup
               </Button>
             </div>
 
@@ -209,8 +212,9 @@ const LoginPage = () => {
                 variant="outline"
                 type="submit"
                 className="bg-blue-600 hover:bg-blue-700 text-white hover:text-white w-full mt-2 h-11 cursor-pointer"
+                disabled={isLoading}
               >
-                Login
+                {isLoading ? <LoadingDots/> : "Login"}
               </Button>
             </form>
           </section>

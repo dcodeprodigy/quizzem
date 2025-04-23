@@ -1,11 +1,14 @@
 import React from "react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import AppLogo from "@/components/applogo";
-import MapSavedQuizzes from "@/components/saved-quizz";
-import MapQuizHistory from "@/components/quizz-history";
+import AppLogo from "@/components/AppLogo";
+import NoSavedQuiz from "@/components/nosavedquiz";
+import NoQuizHistory from "@/components/noquizhistory";
+import MapSavedQuizzes from "@/components/SavedQuizz";
+import MapQuizHistory from "@/components/QuizzHistory";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { InfoIcon, Settings, UploadCloud } from "lucide-react";
+import { History, InfoIcon, Settings, UploadCloud } from "lucide-react";
 import { User } from "lucide-react";
 import { CircleHelp } from "lucide-react";
 import { LogOut } from "lucide-react";
@@ -18,29 +21,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import * as card from "@/components/ui/card";
+import * as tooltip from "@/components/ui/tooltip";
+import * as select from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { Progress } from "@/components/ui/progress";
@@ -55,6 +38,9 @@ import { CirclePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
+import refreshAccess from "@/utils/refreshAccess";
+import { Navigate } from "react-router-dom";
 
 const WelcomeMsg = ({ dashboardData }) => {
   return (
@@ -70,15 +56,31 @@ const WelcomeMsg = ({ dashboardData }) => {
   );
 };
 
+const ToolTip = ({ text }) => {
+  return (
+    <tooltip.TooltipProvider>
+      <tooltip.Tooltip>
+        <tooltip.TooltipTrigger className="cursor-help">
+          <Info size={13} className="hover:text-blue-700" />
+        </tooltip.TooltipTrigger>
+        <tooltip.TooltipContent className="text-sm max-w-[200px] text-center">
+          <p>{text}</p>
+        </tooltip.TooltipContent>
+      </tooltip.Tooltip>
+    </tooltip.TooltipProvider>
+  );
+};
+
+// Main Exported Component
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   const [loadingFail, setLoadingFail] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [settingsHovered, setSettingsHovered] = useState(false);
   const [avScoreColor, setAvScoreColor] = useState({ score: "", progress: "" });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadedFileName, setUploadedFileName] = useState(false);
   const [generateQuizData, setGenerateQuizData] = useState({});
   const [difficultyValue, setDifficultyValue] = useState("normal");
   const [modeValue, setModeValue] = useState("study");
@@ -87,8 +89,41 @@ const Dashboard = () => {
   const [isTimeLimit, setIsTimeLimit] = useState(false);
   const [showFullSaved, setShowFullSaved] = useState(false);
   const [showFullHistory, setShowFullHistory] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState({
+    status: null,
+    name: null,
+    id: null,
+    errMsg: null,
+  });
+  const [selectedFile, setSelectedFile] = useState({name: null, extension: null, fileSrc: null});
+  const [uploadClassNames, setUploadClassNames] = useState("");
+  const [uploadText, setUploadText] = useState("");
+  const [fileSrc, setFileSrc] = useState(null);
+  const [fileExtension, setFileExtension] = useState();
 
-
+  // |-- Helper function for updating Upload Text and classnames--|
+  const handleUploadTextClass = () => {
+    if (selectedFile.name && uploadedFile.status === null) {
+      // File has been selected but not uploaded
+      const text = `Selected file: "${selectedFile.name}"`
+      setUploadText((prev) => prev = text);
+      setUploadClassNames("text-yellow-600");
+    } else if (uploadedFile.status) {
+      // File was uploaded successfully
+      const text = `Your file, ${uploadedFile.name}, was uploaded successfully!`
+      setUploadText(
+        (prev) => prev = text
+      );
+      const className = "text-green-600";
+      setUploadClassNames(className);
+    } else if (selectedFile.name && uploadedFile.status === false) {
+      // File upload failed
+      setUploadText(
+        `${uploadedFile.errMsg || "An error occured while uploading your file"}`
+      );
+      setUploadClassNames("text-red-600");
+    }
+  };
 
   // Drag and Drop Handlers
   const handleDragOver = (event) => {
@@ -104,10 +139,45 @@ const Dashboard = () => {
     if (isGenerating) return;
     setIsDragging(false);
     const file = event.dataTransfer.files?.[0];
+
     if (file) {
-      console.log("File dropped:", file.name);
-      setUploadedFileName(file.name);
-      setSelectedTopics([]);
+      const extension = file.name.split(".").pop().toLowerCase();
+      console.log("File dropped:", file.name, extension);
+      setSelectedFile((prev) => ({
+        ...prev,
+        name: file.name,
+        extension: extension
+      }));
+      handleUploadTextClass();
+      // Set img Src
+      setImgSrc(extension);
+    }
+  };
+
+  const setImgSrc = (x) => {
+    switch (x) {
+      case "pdf":
+        setSelectedFile((prev) => ({
+          ...prev,
+          fileSrc: "/images/pdf.png"
+        }));
+      case "pptx" || "ppt":
+        setSelectedFile((prev) => ({
+          ...prev,
+          fileSrc: "/images/pptx.png"
+        }));
+      case "txt":
+        setSelectedFile((prev) => ({
+          ...prev,
+          fileSrc: "/images/txt.png"
+        }));
+      case "docx" || "doc":
+        setSelectedFile((prev) => ({
+          ...prev,
+          fileSrc: "/images/doc.png"
+        }));
+      default:
+        break;
     }
   };
 
@@ -169,20 +239,47 @@ const Dashboard = () => {
     const fetchData = async () => {
       // Simulate Fetch delay
       try {
-        const response = await axios.get("/mock/dashboard.json");
+        const response = await axios.get("http://localhost:5000/api/users/me", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         await new Promise((resolve) => {
           setTimeout(resolve, 2000);
         });
         console.log(response);
 
-        if (response.status !== 200) return setLoadingFail(true); // Ask User to Reload. Will not run the next line
-        console.log("am i runnign");
-        setDashboardData(response.data); // If successful
+        // Set Dashboard Data
+        setDashboardData(response.data);
 
         // Now that data is available, calc average score color
         getAvScoreColor(response.data);
       } catch (error) {
-        console.log("An error occurred: ", error);
+        const responseObject = error.response;
+        console.log("resobj", responseObject);
+
+        if (responseObject.data.refresh) {
+          const success = await refreshAccess();
+          if (success) {
+            // if refresh was successful, retry request
+            setIsLoading(true);
+            return fetchData();
+          } else {
+            // if refresh failed, clear local storage and redirect to login
+            localStorage.clear("token");
+            return navigate("/login");
+          }
+        }
+
+        // if there is no refresh flag, then set LoadingFail to true. This means that loading failed not due to token expiry but other reasons.
+        if (responseObject.status !== 401) {
+          setLoadingFail(true);
+          console.log("Error fetching data: ", responseObject);
+        } else {
+          console.log("Token expired or invalid. Redirecting to login...");
+          localStorage.clear("token");
+          navigate("/login");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -191,16 +288,27 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  
   return (
     <>
       <div className="w-full max-w-full bg-gradient-to-b from-gray-50 to-blue-50 ">
         <header className="w-full grid grid-cols-2 items-center text-slate-500 shadow-sm px-4 md:px-8 py-6">
-          <AppLogo />
+          {isLoading ? (
+            <Skeleton className="w-[100px] h-[32px]" /> // Skeleton for AppLogo
+          ) : (
+            <AppLogo />
+          )}
 
           <div className="flex justify-end items-center flex-end gap-3">
             {isLoading ? (
-              "Hello"
+              // Skeleton for Avatar, Name, Email, Settings Dropdown
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-[40px] h-[40px] rounded-full" />
+                <div className="flex flex-col gap-1">
+                  <Skeleton className="w-[80px] h-[18px]" />
+                  <Skeleton className="w-[120px] h-[14px]" />
+                </div>
+                <Skeleton className="w-[36px] h-[36px] rounded-md" />
+              </div>
             ) : (
               <>
                 <Avatar className="border-2 border-blue-100 grow-0 size-10">
@@ -250,7 +358,13 @@ const Dashboard = () => {
                         <span>Support</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500">
+                      <DropdownMenuItem
+                        className="text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500"
+                        onClick={() => {
+                          localStorage.clear("token");
+                          navigate("/login");
+                        }}
+                      >
                         <LogOut />
                         <span>Log out</span>
                       </DropdownMenuItem>
@@ -262,157 +376,147 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="px-4 md:px-8 py-2">
-          <WelcomeMsg dashboardData={dashboardData} />
+        <main className="px-4 md:px-8 py-2 pb-8">
+          {isLoading ? (
+            <div className="my-4">
+              <Skeleton className="w-1/3 h-8 mb-2" />
+              <Skeleton className="w-1/2 h-6" />
+            </div>
+          ) : (
+            <WelcomeMsg dashboardData={dashboardData} />
+          )}
 
-          <section className="my-8 grid grid-cols-2 gap-3 lg:grid-cols-4 max-[300px]:grid-cols-1">
-            <Card className="hover:shadow-md ">
-              <CardHeader>
-                <CardDescription className="flex flex-row">
-                  <span className="mr-2 text-sm max-[320px]:text-xs">
-                    Quizzes Taken
-                  </span>
+          <section className="my-8 grid grid-cols-2 gap-3 lg:grid-cols-4 max-[420px]:grid-cols-1">
+            {isLoading ? (
+              // Skeleton for 4 Stat Cards
+              Array.from({ length: 4 }).map((_, index) => (
+                <card.Card key={`stat-skeleton-${index}`}>
+                  <card.CardHeader>
+                    <Skeleton className="w-2/3 h-4 mb-2" />{" "}
+                    {/* CardDescription */}
+                    <Skeleton className="w-1/2 h-8 py-1" /> {/* CardTitle */}
+                  </card.CardHeader>
+                  <card.CardContent>
+                    <Skeleton className="w-full h-2" /> {/* Progress */}
+                  </card.CardContent>
+                </card.Card>
+              ))
+            ) : (
+              // Actual Stat Cards
+              <>
+                <card.Card className="hover:shadow-md ">
+                  <card.CardHeader>
+                    <card.CardDescription className="flex flex-row">
+                      <span className="mr-2 text-sm max-[320px]:text-xs">
+                        Quizzes Taken
+                      </span>
 
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-help">
-                        <Info size={13} className="hover:text-blue-700" />
-                      </TooltipTrigger>
-                      <TooltipContent className="text-sm">
-                        <p>
-                          Monthly quota of quizzes generated. <br />
-                          This resets at the start of each month
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CardDescription>
-                <CardTitle className="text-2xl md:text-3xl font-bold text-blue-900 py-1">
-                  {dashboardData?.stats.quizzesTaken.value}{" "}
-                  <span className="text-lg">of</span>{" "}
-                  {dashboardData?.stats.quizMonthlyQuota.value}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Progress
-                  value={
-                    (dashboardData?.stats.quizzesTaken.value /
-                      dashboardData?.stats.quizMonthlyQuota.value) *
-                    100
-                  }
-                  className="[&>div]:bg-blue-500"
-                />
-              </CardContent>
-            </Card>
+                      <ToolTip
+                        text={
+                          "Monthly quota of quizzes generated. This resets at the start of each month"
+                        }
+                      />
+                    </card.CardDescription>
+                    <card.CardTitle className="text-2xl md:text-3xl font-bold text-blue-900 py-1">
+                      {dashboardData?.stats.quizzesTaken.value}{" "}
+                      <span className="text-lg">of</span>{" "}
+                      {dashboardData?.stats.quizMonthlyQuota.value}
+                    </card.CardTitle>
+                  </card.CardHeader>
+                  <card.CardContent>
+                    <Progress
+                      value={
+                        (dashboardData?.stats.quizzesTaken.value /
+                          dashboardData?.stats.quizMonthlyQuota.value) *
+                        100
+                      }
+                      className="[&>div]:bg-blue-500"
+                    />
+                  </card.CardContent>
+                </card.Card>
 
-            <Card className="hover:shadow-md">
-              <CardHeader>
-                <CardDescription className="flex flex-row">
-                  <span className="mr-2 text-sm max-[320px]:text-xs">
-                    Average Score
-                  </span>
+                <card.Card className="hover:shadow-md">
+                  <card.CardHeader>
+                    <card.CardDescription className="flex flex-row">
+                      <span className="mr-2 text-sm max-[320px]:text-xs">
+                        Average Score
+                      </span>
+                      <ToolTip text="The average score of all quizzes taken this month" />
+                    </card.CardDescription>
+                    <card.CardTitle className="text-2xl md:text-3xl font-bold py-1">
+                      <span className={avScoreColor.score}>
+                        {dashboardData?.stats.averageScore.value}%
+                      </span>
+                    </card.CardTitle>
+                  </card.CardHeader>
+                  <card.CardContent>
+                    <Progress
+                      value={dashboardData?.stats.averageScore.value}
+                      className={avScoreColor.progress}
+                    />
+                  </card.CardContent>
+                </card.Card>
 
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-help">
-                        <Info size={13} className="hover:text-blue-700" />
-                      </TooltipTrigger>
-                      <TooltipContent className="text-sm">
-                        <p>The average score of all quizzes taken this month</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CardDescription>
-                <CardTitle className="text-2xl md:text-3xl font-bold py-1">
-                  <span className={avScoreColor.score}>
-                    {dashboardData?.stats.averageScore.value}%
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Progress
-                  value={dashboardData?.stats.averageScore.value}
-                  className={avScoreColor.progress}
-                />
-              </CardContent>
-            </Card>
+                <card.Card className="hover:shadow-md">
+                  <card.CardHeader>
+                    <card.CardDescription className="flex flex-row">
+                      <span className="mr-2 text-sm max-[320px]:text-xs">
+                        Quizzes Created
+                      </span>
+                      <ToolTip text={"Total number of quizzes ever created."} />
+                    </card.CardDescription>
+                    <card.CardTitle className="text-2xl md:text-3xl font-bold text-purple-700 py-1">
+                      {dashboardData?.stats.quizzesCreated.value}
+                    </card.CardTitle>
+                  </card.CardHeader>
+                  <card.CardContent>
+                    <Progress
+                      value={dashboardData?.stats.quizzesCreated.value}
+                      className="[&>div]:bg-purple-500"
+                    />
+                  </card.CardContent>
+                </card.Card>
 
-            <Card className="hover:shadow-md">
-              <CardHeader>
-                <CardDescription className="flex flex-row">
-                  <span className="mr-2 text-sm max-[320px]:text-xs">
-                    Quizzes Created
-                  </span>
-
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-help">
-                        <Info size={13} className="hover:text-blue-700" />
-                      </TooltipTrigger>
-                      <TooltipContent className="text-sm">
-                        <p>Total number of quizzes ever created.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CardDescription>
-                <CardTitle className="text-2xl md:text-3xl font-bold text-purple-700 py-1">
-                  {dashboardData?.stats.quizzesCreated.value}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Progress
-                  value={dashboardData?.stats.quizzesCreated.value}
-                  className="[&>div]:bg-purple-500"
-                />
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md">
-              <CardHeader>
-                <CardDescription className="flex flex-row">
-                  <span className="mr-2 text-sm max-[320px]:text-xs">
-                    Saved Quizzes
-                  </span>
-
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-help">
-                        <Info size={13} className="hover:text-blue-700" />
-                      </TooltipTrigger>
-                      <TooltipContent className="text-sm">
-                        <p>Total number of quizzes currently in saved</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CardDescription>
-                <CardTitle className="text-2xl md:text-3xl font-bold text-yellow-700 py-1">
-                  {dashboardData?.stats.savedQuizzes.value}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Progress
-                  value={dashboardData?.stats.savedQuizzes.value}
-                  className="[&>div]:bg-yellow-500"
-                />
-              </CardContent>
-            </Card>
+                <card.Card className="hover:shadow-md">
+                  <card.CardHeader>
+                    <card.CardDescription className="flex flex-row">
+                      <span className="mr-2 text-sm max-[320px]:text-xs">
+                        Saved Quizzes
+                      </span>
+                      <ToolTip
+                        text={"Total number of quizzes currently in saved"}
+                      />
+                    </card.CardDescription>
+                    <card.CardTitle className="text-2xl md:text-3xl font-bold text-yellow-700 py-1">
+                      {dashboardData?.stats.savedQuizzes.value}
+                    </card.CardTitle>
+                  </card.CardHeader>
+                  <card.CardContent>
+                    <Progress
+                      value={dashboardData?.stats.savedQuizzes.value}
+                      className="[&>div]:bg-yellow-500"
+                    />
+                  </card.CardContent>
+                </card.Card>
+              </>
+            )}
           </section>
 
           {/* Generation and Quizzes Section */}
           <section className="grid lg:grid-cols-[2fr_1fr] gap-0 sm:gap-5 lg:mt-12 lg:relative lg:items-start">
-            {/* Generate Quiz */}
-            <Card className="shadow-lg lg:sticky lg:bottom-0">
+            {/* Generate Quiz Card - Assuming this doesn't need a skeleton based on main isLoading */}
+            <card.Card className="shadow-lg lg:sticky lg:bottom-0">
               <form>
-                <CardHeader className="bg-gray-50 p-5">
-                  <CardTitle className="font-medium text-lg">
+                <card.CardHeader className="bg-gray-50 p-5">
+                  <card.CardTitle className="font-medium text-lg">
                     Generate New Quiz
-                  </CardTitle>
-                  <CardDescription>
+                  </card.CardTitle>
+                  <card.CardDescription>
                     Upload a document and customize your quiz
-                  </CardDescription>
-                </CardHeader>
+                  </card.CardDescription>
+                </card.CardHeader>
 
-                <CardContent>
+                <card.CardContent>
                   <Label className="font-medium block text-sm my-3 text-gray-700">
                     Upload Document
                   </Label>
@@ -446,12 +550,20 @@ const Dashboard = () => {
                       <CloudUpload
                         className={`w-8 h-8 sm:w-10 sm:h-10 mb-3 transition-transform ${
                           isDragging && !isGenerating ? "animate-bounce" : ""
+                        } ${selectedFile.extension && selectedFile.fileSrc && "hidden"}`}
+                      />
+                      <img
+                        src={selectedFile.extension && selectedFile.fileSrc}
+                        className={`hidden ${
+                          selectedFile.extension &&
+                          selectedFile.fileSrc &&
+                          "block w-8 h-8 sm:w-10 sm:h-10 mb-3"
                         }`}
                       />
-                      {!uploadedFileName ? (
+                      {!selectedFile.name ? (
                         <>
                           <p className="mb-1 text-xs sm:text-sm">
-                            <span className="font-semibold hover:text-blue-500 hover:underline">
+                            <span className="font-semibold hover:text-blue-300 hover:underline">
                               Click to upload
                             </span>{" "}
                             or drag and drop
@@ -461,12 +573,15 @@ const Dashboard = () => {
                           </p>
                         </>
                       ) : (
-                        <p className="text-sm text-green-600 font-medium flex items-center break-all px-2">
+                        <p
+                          className={`text-sm ${uploadClassNames} font-medium flex items-center break-all px-2`}
+                        >
                           <FileText
                             size={16}
                             className="inline mr-1.5 shrink-0"
                           />
-                          {uploadedFileName} uploaded!
+
+                          {uploadText}
                         </p>
                       )}
                       <Input
@@ -494,22 +609,22 @@ const Dashboard = () => {
                           htmlFor="difficulty-group"
                         >
                           <span className="text-gray-700">Difficulty</span>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">
+                          <tooltip.TooltipProvider>
+                            <tooltip.Tooltip>
+                              <tooltip.TooltipTrigger className="cursor-help">
                                 <Info
                                   size={14}
                                   className="hover:text-blue-700 text-gray-400"
                                 />
-                              </TooltipTrigger>
-                              <TooltipContent className="text-sm">
+                              </tooltip.TooltipTrigger>
+                              <tooltip.TooltipContent className="text-sm">
                                 Normal offers standard questions. <br />
                                 Select hard to attempt more complex phrasing{" "}
                                 <br />
                                 and trickier options.
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                              </tooltip.TooltipContent>
+                            </tooltip.Tooltip>
+                          </tooltip.TooltipProvider>
                         </Label>
 
                         <ToggleGroup
@@ -553,21 +668,21 @@ const Dashboard = () => {
                           htmlFor="mode-group"
                         >
                           <span className="text-gray-700">Mode</span>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger className="cursor-help">
+                          <tooltip.TooltipProvider>
+                            <tooltip.Tooltip>
+                              <tooltip.TooltipTrigger className="cursor-help">
                                 <Info
                                   size={14}
                                   className="hover:text-blue-700 text-gray-400"
                                 />
-                              </TooltipTrigger>
-                              <TooltipContent className="text-sm">
+                              </tooltip.TooltipTrigger>
+                              <tooltip.TooltipContent className="text-sm">
                                 Study mode provides instant feedback. <br />
                                 Exam mode show results only at the end. <br />
                                 and trickier options.
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                              </tooltip.TooltipContent>
+                            </tooltip.Tooltip>
+                          </tooltip.TooltipProvider>
                         </Label>
 
                         <ToggleGroup
@@ -614,41 +729,49 @@ const Dashboard = () => {
                         >
                           <div className="text-gray-700 flex items-center gap-3 mb-3">
                             <span>Number of Questions</span>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">
+                            <tooltip.TooltipProvider>
+                              <tooltip.Tooltip>
+                                <tooltip.TooltipTrigger className="cursor-help">
                                   <Info
                                     size={14}
                                     className="hover:text-blue-700 text-gray-400"
                                   />
-                                </TooltipTrigger>
-                                <TooltipContent className="text-sm">
+                                </tooltip.TooltipTrigger>
+                                <tooltip.TooltipContent className="text-sm">
                                   Select Auto to generate as many high-yield
                                   questions <br />
                                   as possible from the document. Questions are
                                   capped at 100
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                                </tooltip.TooltipContent>
+                              </tooltip.Tooltip>
+                            </tooltip.TooltipProvider>
                           </div>
-                          <Select
+                          <select.Select
                             name="noOfQuestions"
                             value={noOfQuestions}
                             onChange={(e) => setNoOfQuestions(e.current.value)}
                           >
-                            <SelectTrigger
+                            <select.SelectTrigger
                               className="max-w-[135px] w-[135px] !text-gray-700"
                               id="noOfQuestions"
                             >
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent className="text-gray-500">
-                              <SelectItem value="auto">Auto</SelectItem>
-                              <SelectItem value="10">10</SelectItem>
-                              <SelectItem value="25">25</SelectItem>
-                              <SelectItem value="40">40</SelectItem>
-                            </SelectContent>
-                          </Select>
+                              <select.SelectValue placeholder="Select" />
+                            </select.SelectTrigger>
+                            <select.SelectContent className="text-gray-500">
+                              <select.SelectItem value="auto">
+                                Auto
+                              </select.SelectItem>
+                              <select.SelectItem value="10">
+                                10
+                              </select.SelectItem>
+                              <select.SelectItem value="25">
+                                25
+                              </select.SelectItem>
+                              <select.SelectItem value="40">
+                                40
+                              </select.SelectItem>
+                            </select.SelectContent>
+                          </select.Select>
                         </Label>
                       </div>
 
@@ -660,15 +783,15 @@ const Dashboard = () => {
                         >
                           <div className="flex gap-3 flex-shrink">
                             <span>Time Limit</span>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger className="cursor-help">
+                            <tooltip.TooltipProvider>
+                              <tooltip.Tooltip>
+                                <tooltip.TooltipTrigger className="cursor-help">
                                   <Info
                                     size={14}
                                     className="hover:text-blue-700 text-gray-400"
                                   />
-                                </TooltipTrigger>
-                                <TooltipContent className="text-sm text-center">
+                                </tooltip.TooltipTrigger>
+                                <tooltip.TooltipContent className="text-sm text-center">
                                   {!isTimeLimit ? (
                                     <>
                                       Enable to set time limit for taking quiz.
@@ -678,9 +801,9 @@ const Dashboard = () => {
                                   ) : (
                                     "Set time limit"
                                   )}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                                </tooltip.TooltipContent>
+                              </tooltip.Tooltip>
+                            </tooltip.TooltipProvider>
                           </div>
                           <Switch
                             id="activate-time"
@@ -730,58 +853,75 @@ const Dashboard = () => {
                       />
                     </div>
                   </fieldset>
-                </CardContent>
-                <CardFooter className="bg-gray-50 py-6">
+                </card.CardContent>
+                <card.CardFooter className="bg-gray-50 py-6">
                   <Button
                     className="w-full bg-blue-600 text-white py-5 hover:bg-blue-700 cursor-pointer"
                     onSubmit={(e) => handleSubmission(e)}
-                    disabled={isGenerating}
+                    disabled={isGenerating || isLoading}
                   >
                     <CirclePlus />
                     Generate Quiz
                   </Button>
-                </CardFooter>
+                </card.CardFooter>
               </form>
-            </Card>
+            </card.Card>
 
             {/* See History and Saved */}
-            <div className="mt-6 sm:mt-0 flex flex-col gap-6 sm:gap-3 sm:grid sm:grid-cols-2 sm:items-start lg:items-stretch lg:flex lg:flex-col">
+            <div className="mt-6 sm:mt-0 flex flex-col gap-6 sm:gap-3 md:grid md:grid-cols-2 md:items-start lg:items-stretch lg:flex lg:flex-col">
               {/* Saved */}
-              <Card>
-                <CardHeader className="bg-yellow-50 p-5">
-                  <CardTitle className="font-medium  text-yellow-800 flex items-center justify-between">
+              <card.Card>
+                <card.CardHeader className="bg-yellow-50 p-5">
+                  <card.CardTitle className="font-medium  text-yellow-800 flex items-center justify-between">
                     Saved Quizzes
                     <Save size={16} className="text-yellow-600" />
-                  </CardTitle>
-                </CardHeader>
+                  </card.CardTitle>
+                </card.CardHeader>
 
-                {/* Map the saved quizzes here or show that no saved quiz was found */}
-                {isLoading ? (
-                  ""
-                ) : (
-                  <CardContent className="px-0">
-                    {!dashboardData.savedQuizzes.length ? (
-                      <NoSavedQuiz />
-                    ) : showFullSaved ? (
-                      <MapSavedQuizzes showFullSav={true} dashboardData={dashboardData} />
-                    ) : (
-                      <MapSavedQuizzes showFullSav={false} dashboardData={dashboardData} />
-                    )}
-                  </CardContent>
-                )}
+                <card.CardContent className="px-0">
+                  {isLoading ? (
+                    // Skeleton loader for Saved Quizzes List
+                    <div className="p-4 space-y-3">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                          key={`saved-skel-${index}`}
+                          className="flex items-center space-x-3"
+                        >
+                          <Skeleton className="h-4 w-4" />
+                          <Skeleton className="h-4 flex-1" />
+                          <Skeleton className="h-4 w-8" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : !dashboardData?.savedQuizzes?.length ? (
+                    <NoSavedQuiz />
+                  ) : showFullSaved ? (
+                    <MapSavedQuizzes
+                      showFullSav={true}
+                      dashboardData={dashboardData}
+                    />
+                  ) : (
+                    <MapSavedQuizzes
+                      showFullSav={false}
+                      dashboardData={dashboardData}
+                    />
+                  )}
+                </card.CardContent>
 
                 {isLoading ? (
-                  // Skeleton loader
-                  ""
+                  // Skeleton loader for "View All" button area if needed
+                  <div className="p-4">
+                    <Skeleton className="w-full h-6" />
+                  </div>
                 ) : (
                   <>
-                    {dashboardData.savedQuizzes.length > 5 && (
+                    {dashboardData?.savedQuizzes?.length > 5 && (
                       <>
                         <div>
                           <Separator
                             className={`${showFullSaved && "hidden"}`}
                           />
-                          <CardFooter
+                          <card.CardFooter
                             className={`bg-gray-50 py-4 ${
                               showFullSaved && "hidden"
                             }`}
@@ -794,50 +934,67 @@ const Dashboard = () => {
                             >
                               View All Saved
                             </Button>
-                          </CardFooter>
+                          </card.CardFooter>
                         </div>
                       </>
                     )}
                   </>
                 )}
-              </Card>
+              </card.Card>
 
               {/* History */}
-              <Card>
-                <CardHeader className="bg-purple-50 py-5">
-                  <CardTitle className="font-medium  text-purple-800 flex items-center justify-between">
+              <card.Card>
+                <card.CardHeader className="bg-purple-50 py-5">
+                  <card.CardTitle className="font-medium  text-purple-800 flex items-center justify-between">
                     Quiz History
-                    <Save size={16} className="text-purple-600" />
-                  </CardTitle>
-                </CardHeader>
+                    <History size={16} className="text-purple-600" />
+                  </card.CardTitle>
+                </card.CardHeader>
 
-                {/* Map the saved quizzes here or show that no saved quiz was found */}
-                {isLoading ? (
-                  ""
-                ) : (
-                  <CardContent className="px-0">
-                    {!dashboardData.quizHistory.length ? (
-                      <NoQuizHistory />
-                    ) : showFullHistory ? (
-                      <MapQuizHistory showfullHist={true} dashboardData={dashboardData}/>
-                    ) : (
-                      <MapQuizHistory showfullHist={false} dashboardData={dashboardData}/>
-                    )}
-                  </CardContent>
-                )}
+                <card.CardContent className="px-0">
+                  {isLoading ? (
+                    // Skeleton loader for Quiz History List
+                    <div className="p-4 space-y-3">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                          key={`hist-skel-${index}`}
+                          className="flex items-center space-x-3"
+                        >
+                          <Skeleton className="h-4 w-4" />
+                          <Skeleton className="h-4 flex-1" />
+                          <Skeleton className="h-4 w-8" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : !dashboardData?.quizHistory?.length ? (
+                    <NoQuizHistory />
+                  ) : showFullHistory ? (
+                    <MapQuizHistory
+                      showfullHist={true}
+                      dashboardData={dashboardData}
+                    />
+                  ) : (
+                    <MapQuizHistory
+                      showfullHist={false}
+                      dashboardData={dashboardData}
+                    />
+                  )}
+                </card.CardContent>
 
                 {isLoading ? (
-                  // Skeleton loader
-                  ""
+                  // Skeleton loader for "View All" button area if needed
+                  <div className="p-4">
+                    <Skeleton className="w-full h-6" />
+                  </div>
                 ) : (
                   <>
-                    {dashboardData.quizHistory.length > 5 && (
+                    {dashboardData?.quizHistory?.length > 5 && (
                       <>
                         <div>
                           <Separator
                             className={`${showFullHistory && "hidden"}`}
                           />
-                          <CardFooter
+                          <card.CardFooter
                             className={`bg-gray-50 py-4 ${
                               showFullHistory && "hidden"
                             }`}
@@ -852,13 +1009,13 @@ const Dashboard = () => {
                             >
                               View Full History
                             </Button>
-                          </CardFooter>
+                          </card.CardFooter>
                         </div>
                       </>
                     )}
                   </>
                 )}
-              </Card>
+              </card.Card>
             </div>
           </section>
         </main>

@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RefreshCw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import evalScoreColor from "@/utils/evaluateScoreColor";
-import NoSavedQuiz from "./nosavedquiz";
+import NoSavedQuiz from "./NoSavedQuiz";
 
 const MapSavedQuizzes = ({ showFullSav, dashboardData }) => {
     const savedQuizzes = dashboardData?.savedQuizzes;
