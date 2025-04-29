@@ -1,18 +1,31 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { io } from "socket.io-client";
 import AppLogo from "@/components/AppLogo";
 import NoSavedQuiz from "@/components/nosavedquiz";
 import NoQuizHistory from "@/components/noquizhistory";
 import MapSavedQuizzes from "@/components/SavedQuizz";
 import MapQuizHistory from "@/components/QuizzHistory";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { History, InfoIcon, Settings, UploadCloud } from "lucide-react";
+import {
+  CircleCheck,
+  ClipboardList,
+  Delete,
+  FileStack,
+  Gauge,
+  History,
+  InfoIcon,
+  ListRestart,
+  SaveIcon,
+  Settings,
+  Trash2,
+  UploadCloud,
+} from "lucide-react";
 import { User } from "lucide-react";
 import { CircleHelp } from "lucide-react";
 import { LogOut } from "lucide-react";
-import { Info } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,10 +35,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import * as card from "@/components/ui/card";
-import * as tooltip from "@/components/ui/tooltip";
 import * as select from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-
+import ToolTip from "@/components/ToolTip";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { CloudUpload } from "lucide-react";
@@ -40,14 +52,20 @@ import { Save } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import refreshAccess from "@/utils/refreshAccess";
+import { Link as Link2 } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import formatBytes from "@/utils/formatBytes";
+import { X } from "lucide-react";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { ToastContainer } from "react-toastify";
+import { ErrorToast, InfoToast, LoadingToast } from "@/utils/toast";
 
 const WelcomeMsg = ({ dashboardData }) => {
   return (
     <>
       <div>
         <h1 className="font-bold text-3xl text-gray-800 max-[930px]:text-[clamp(1.5rem,_1rem_+_2.2vw,_2.2rem)] mt-6">
-          Welcome back,{" "}
+          Hello there,{" "}
           <span className="text-blue-600">{dashboardData?.user.fName}</span>!
         </h1>
         <p className="sm:text-base">Let's get quizzing.</p>
@@ -56,35 +74,114 @@ const WelcomeMsg = ({ dashboardData }) => {
   );
 };
 
-const ToolTip = ({ text }) => {
+const PreviouslyUploaded = ({ ...props }) => {
+  console.log(props.prevUploads);
   return (
-    <tooltip.TooltipProvider>
-      <tooltip.Tooltip>
-        <tooltip.TooltipTrigger className="cursor-help">
-          <Info size={13} className="hover:text-blue-700" />
-        </tooltip.TooltipTrigger>
-        <tooltip.TooltipContent className="text-sm max-w-[200px] text-center">
-          <p>{text}</p>
-        </tooltip.TooltipContent>
-      </tooltip.Tooltip>
-    </tooltip.TooltipProvider>
+    <>
+      <AnimatePresence>
+        {props.prevUploads.length === 0 && "You have not uploaded any files"}
+        <motion.div
+          key="previously-uploaded"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}
+          className="border rounded-md bg-gray-50 overflow-y-auto max-h-40 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 transition-all relative"
+        >
+          <Label className="text-xs font-normal text-gray-500 sticky top-0 bg-gray-50 py-2 px-3 z-50">
+            Select a file uploaded in the last 3 months:
+          </Label>
+          <div className="px-3 pb-3 mb-4">
+            {console.log("The prevUploads before error: ", props.prevUploads)}
+            {console.log(
+              "The uploadedFile object before error: ",
+              props.selectedFile
+            )}
+            {props.prevUploads.map((upload) => {
+              return (
+                <Button
+                  className="bg-transparent w-full hover:bg-gray-100 hover:scale-[1.01]"
+                  key={upload.fileId}
+                  onClick={(e) => {
+                    // set as selected
+                    e.preventDefault();
+                    console.log("TEH RANGE FOR THIS SEL: ", upload);
+                    const extension = upload.fileName
+                      .split(".")
+                      .pop()
+                      .toLowerCase();
+                    props.setSelectedFile((prev) => ({
+                      ...prev,
+                      name: upload.fileName,
+                      extension: extension,
+                      size: formatBytes(upload.fileSize),
+                      fileIconColor: props.getfileIconColor(upload.fileName),
+                    }));
+                    props.setUploadedFile((prev) => ({
+                      ...prev,
+                      status: true,
+                      name: upload.fileName,
+                      id: upload.fileId,
+                      range: upload.range,
+                    }));
+
+                    // set display of prevUploads to false
+                    props.setDisplayPrevUploads(false);
+
+                    // set the userStart & end Page to fit the component
+                    props.setUserStartPage(upload.range.start);
+                    props.setUserEndPage(upload.range.end);
+                  }}
+                >
+                  <FileText
+                    className={`${props.getfileIconColor(upload.fileName)} w-6`}
+                    size={20}
+                  />
+                  <Label className="truncate font-normal text-sm text-gray-800 flex-auto">
+                    {upload.fileName}
+                  </Label>
+                  <span className="text-gray-500 font-normal text-xs">
+                    {formatBytes(upload.fileSize)}
+                  </span>
+                </Button>
+              );
+            })}
+            {!props.prevUploads.length && (
+              <>
+                <Separator className="my-3" />
+                <div className=" text-sm text-gray-700 text-left">
+                  0 files were found
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* </section> */}
+        </motion.div>
+      </AnimatePresence>
+    </>
   );
 };
 
 // Main Exported Component
 const Dashboard = () => {
+  const inputElem = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [loadingFail, setLoadingFail] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [settingsHovered, setSettingsHovered] = useState(false);
-  const [avScoreColor, setAvScoreColor] = useState({ score: "", progress: "" });
+  const [avScoreColor, setAvScoreColor] = useState({
+    score: "",
+    progress: "",
+    border: "",
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [generateQuizData, setGenerateQuizData] = useState({});
   const [difficultyValue, setDifficultyValue] = useState("normal");
   const [modeValue, setModeValue] = useState("study");
-  const [noOfQuestions, setNoOfQuestions] = useState();
+  const [noOfQuestions, setNoOfQuestions] = useState("25"); // if you want a default value, this must be a string, not a number. The select field in the component has a value with string, not numbers. Therefore, this must also be a string
   const [timeLimit, setTimeLimit] = useState(20);
   const [isTimeLimit, setIsTimeLimit] = useState(false);
   const [showFullSaved, setShowFullSaved] = useState(false);
@@ -93,35 +190,217 @@ const Dashboard = () => {
     status: null,
     name: null,
     id: null,
-    errMsg: null,
+    range: {
+      start: null,
+      end: null,
+    },
   });
-  const [selectedFile, setSelectedFile] = useState({name: null, extension: null, fileSrc: null});
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState({
+    name: null,
+    extension: null,
+    fileIconColor: null,
+    size: null,
+  });
+  const [userStartPage, setUserStartPage] = useState(0);
+  const [userEndPage, setUserEndPage] = useState(0);
   const [uploadClassNames, setUploadClassNames] = useState("");
   const [uploadText, setUploadText] = useState("");
-  const [fileSrc, setFileSrc] = useState(null);
-  const [fileExtension, setFileExtension] = useState();
+  const [displayPrevUploaded, setDisplayPrevUploads] = useState(false);
+  const [prevUploads, setPrevUploads] = useState([]);
+  const [triedToGetUploads, setTriedToGetUploads] = useState(false); // flag to check if user has once tried to get uploads. Prevents retrying again and again when prevUploads is []
+  const [prevUploadsLoading, setPreviousUploadsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState("idle"); // idle, connecting, uploading, parsing file, success, error
+  const [fileId, setFileId] = useState(null); // FileID to be received from the server on successful uploads
+  const [errorMsg, setErrorMsg] = useState("");
+  const startPageInput = useRef(null);
+  const [rangeErrors, setRangeErrors] = useState({ start: "", end: "" });
+  const [minMaxError, setMinMaxError] = useState("");
+
+  // Use useRef to hold the socket instance
+  // This avoids re-renders causing socket re-connections unnecessarily
+  const socketRef = useRef(null);
+  const [socketId, setSocketId] = useState(null);
 
   // |-- Helper function for updating Upload Text and classnames--|
   const handleUploadTextClass = () => {
     if (selectedFile.name && uploadedFile.status === null) {
       // File has been selected but not uploaded
-      const text = `Selected file: "${selectedFile.name}"`
-      setUploadText((prev) => prev = text);
+      const text = `Selected file: "${selectedFile.name}"`;
+      setUploadText((prev) => (prev = text));
       setUploadClassNames("text-yellow-600");
     } else if (uploadedFile.status) {
       // File was uploaded successfully
-      const text = `Your file, ${uploadedFile.name}, was uploaded successfully!`
-      setUploadText(
-        (prev) => prev = text
-      );
+      const text = `Your file, ${uploadedFile.name}, was uploaded successfully!`;
+      setUploadText((prev) => (prev = text));
       const className = "text-green-600";
       setUploadClassNames(className);
-    } else if (selectedFile.name && uploadedFile.status === false) {
-      // File upload failed
-      setUploadText(
-        `${uploadedFile.errMsg || "An error occured while uploading your file"}`
-      );
-      setUploadClassNames("text-red-600");
+    }
+  };
+
+  const handleStartChange = (e) => {
+    const value = e.target.value;
+    // Update input immediately
+    setUserStartPage(value);
+
+    // Validate on next tick to ensure state is updated
+    setTimeout(() => validatePageRange("start", value), 0);
+  };
+
+  const handleEndChange = (e) => {
+    const value = e.target.value;
+    // Update input immediately
+    setUserEndPage(value);
+
+    // Validate on next tick
+    setTimeout(() => validatePageRange("end", value), 0);
+  };
+
+  const validatePageRange = (type, value) => {
+    const numericValue = Number(value);
+
+    // Handle empty input by resetting the error and allowing temporary empty value
+    if (value === "") {
+      setRangeErrors((prev) => ({
+        ...prev,
+        [type]: "",
+      }));
+      return;
+    }
+
+    if (isNaN(numericValue)) {
+      setRangeErrors((prev) => ({
+        ...prev,
+        [type]: "Please enter a valid number",
+      }));
+      return;
+    }
+
+    const serverMin = uploadedFile.range.start;
+    const serverMax = uploadedFile.range.end;
+
+    // Use a temporary start and end to compute the validated values
+    let newStart = type === "start" ? numericValue : userStartPage;
+    let newEnd = type === "end" ? numericValue : userEndPage;
+
+    if (type === "start") {
+      newStart = Math.min(Math.max(numericValue, serverMin), serverMax - 1);
+      // Auto-adjust end if needed using the newStart value
+      if (newEnd <= newStart) {
+        newEnd = Math.min(newStart + 1, serverMax);
+      }
+    } else {
+      // Use the current state's start to compute, but since we calculate newStart above,
+      // in practice, this should reference the latest value
+      const currentStart = type === "end" ? userStartPage : newStart;
+      newEnd = Math.min(Math.max(numericValue, currentStart + 1), serverMax);
+    }
+
+    // Determine errors based on the input vs the clamped values
+    const startError =
+      type === "start" && newStart !== numericValue
+        ? `Must be between ${serverMin}-${serverMax - 1}`
+        : "";
+    const endError =
+      type === "end" && newEnd !== numericValue
+        ? `Must be between ${userStartPage + 1}-${serverMax}`
+        : "";
+
+    // Update state and errors
+    setUserStartPage(newStart);
+    setUserEndPage(newEnd);
+    setRangeErrors((prev) => ({
+      ...prev,
+      start: startError,
+      end: endError,
+    }));
+  };
+
+  // --- Helper function to reset both selected file and uploaded file ---
+  const resetFile = () => {
+    setSelectedFile((prev) => ({
+      ...prev,
+      name: null,
+      extension: null,
+      fileIconColor: null,
+    }));
+
+    setUploadedFile((prev) => ({
+      ...prev,
+      status: null,
+      name: null,
+      id: null,
+      range: {
+        start: null,
+        end: null,
+      },
+    }));
+  };
+
+  const getfileIconColor = (name) => {
+    const x = name.split(".").pop().toLowerCase();
+    switch (x) {
+      case "pdf":
+        return "text-red-500";
+      case "pptx":
+      case "ppt":
+        return "text-orange-500";
+      case "txt":
+        return "text-gray-500";
+      case "docx":
+      case "doc":
+        return "text-blue-700";
+      default:
+        return "text-gray-800";
+    }
+  };
+
+  const loadPrevUploaded = async (e) => {
+    e.preventDefault();
+    // check if is already displaying
+    // if not displaying and prevUploads.length is not true, run a get request
+    // if not displaying and prevUploads.length is true, just display from it
+    // if displaying then set to false
+
+    if (displayPrevUploaded) {
+      setDisplayPrevUploads(false);
+    } else if (
+      !displayPrevUploaded &&
+      !prevUploads.length &&
+      !triedToGetUploads
+    ) {
+      setPreviousUploadsLoading(true);
+      let response;
+      try {
+        response = await axios.get(
+          "http://localhost:5000/api/me/previous-uploads",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        const prevUploaded = response.data;
+        setDisplayPrevUploads(true); // show after fetch
+        console.log(response.data);
+        setPrevUploads(prevUploaded);
+        setTriedToGetUploads(true); // set flag to true
+      } catch (error) {
+        console.log(error);
+        if (error?.response?.data?.refresh) {
+          const result = await refreshAccess();
+          if (result) {
+            return loadPrevUploaded(e);
+          }
+        }
+
+        ErrorToast("Error loading previous uploads");
+      } finally {
+        setPreviousUploadsLoading(false);
+      }
+    } else if (!displayPrevUploaded) {
+      setDisplayPrevUploads(true);
     }
   };
 
@@ -134,71 +413,272 @@ const Dashboard = () => {
     event.preventDefault();
     setIsDragging(false);
   };
-  const handleDrop = (event) => {
+  const handleDropOrSelect = (event, drop) => {
     event.preventDefault();
-    if (isGenerating) return;
-    setIsDragging(false);
-    const file = event.dataTransfer.files?.[0];
+    if (isGenerating || isUploading) return;
+    let file;
+    console.log("THIS IS FILE: ", file);
+    if (drop) {
+      setIsDragging(false);
+      file = event.dataTransfer.files?.[0]; // Get only the first file
+    } else {
+      // File was selected manually
+      console.log(event.target);
+      file = event.target.files[0]; // get only the first file
+    }
 
     if (file) {
+      const MAX_ALLOWED_SIZE = 50 * 1024 * 1024; // 50MB
+      if (file.size >= MAX_ALLOWED_SIZE) {
+        // The equal sign is necessary. See server for details if needed
+        InfoToast("file is too large. Max: 50MB");
+        return;
+      }
+
       const extension = file.name.split(".").pop().toLowerCase();
-      console.log("File dropped:", file.name, extension);
+      console.log(
+        "File Selected:",
+        file.name,
+        extension, // extension not to be trusted for any reason
+        formatBytes(file.size)
+      );
+
       setSelectedFile((prev) => ({
         ...prev,
         name: file.name,
-        extension: extension
+        extension: extension,
+        size: formatBytes(file.size),
       }));
       handleUploadTextClass();
-      // Set img Src
-      setImgSrc(extension);
+      // Set img source. This displays an Icon signaling the entension
+      setfileIconColor(extension);
+
+      // Attempt upload
+      const uploadFile = async () => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const token = localStorage.getItem("token");
+          const response = await axios.post(
+            "http://localhost:5000/api/upload",
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "X-Socket-ID": socketId,
+              },
+            }
+          );
+
+          // We rely on Socket IO for status. We are using main axios response for fatal HTTP errors.
+          if (response.status >= 200 && response.status < 300) {
+            const result = await response.data;
+            console.log("Final HTTP Response Body: ", result);
+
+            // Save as uploaded
+            setUploadedFile((prev) => ({
+              ...prev,
+              status: true,
+              name: file.name, // don't use selectedFile.name here since it is yet to be uploaded in state
+              id: result.fileId,
+              range: {
+                start: result.range.start,
+                end: result.range.end,
+              },
+            }));
+            setUserStartPage(result.range.start);
+            setUserEndPage(result.range.end);
+            // Push newly uploaded file to previous uploads
+            const newItem = {
+              fileId: result.fileId,
+              fileName: file.name,
+              range: result.range,
+              fileSize: result.fileSize
+            };
+            setPrevUploads((prev) => [...prev, newItem]);
+          } else {
+            // On FATAL ERROR
+            console.log("Upload failed FATALLY!");
+            ErrorToast(
+              response.data.msg ||
+                "Error uploading file. Make sure you are connected to the internet."
+            );
+          }
+        } catch (error) {
+          console.log(error);
+          if (error?.response?.data?.refresh) {
+            const x = await refreshAccess();
+            if (x) {
+              return await uploadFile();
+            } else {
+              await new Promise((resolve) =>
+                resolve(setTimeout(ErrorToast("Session expired.")), 2500)
+              );
+              navigate("/login");
+            }
+          }
+
+          resetFile(); // reset selected
+
+          console.log("x", prevUploads, displayPrevUploaded, triedToGetUploads)
+          // Set error message
+          setErrorMsg(
+            error?.response?.data?.msg ||
+              "Error:  Unable to upload selected file."
+          );
+          ErrorToast(
+            error?.response?.data?.msg ||
+              "Error:  Unable to upload selected file."
+          );
+        } finally {
+          setProgress(0);
+        }
+      };
+
+      uploadFile();
     }
   };
 
-  const setImgSrc = (x) => {
+  const cancelUpload = async () => {};
+
+  const clearUpload = (e) => {
+    e.preventDefault();
+    inputElem.defaultValue = undefined;
+    // clear selected files and uploaded files state
+    resetFile();
+  };
+
+  useEffect(() => {
+    // --- Establish SocketIO Connection on Page Mount ---
+    // Disconnect previous socket if it exists when component unmounts or re-renders
+    if (socketRef.current) {
+      // Using socketRef here because it does not cause a re-render automatically. So, we can connect to socket without any re-renders
+      socketRef.current.disconnect();
+    }
+
+    setStatus("connecting");
+    socketRef.current = io("http://localhost:5000", {});
+    const socket = socketRef.current; // Local variable for easier access;
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server with ID: ", socket.id);
+      setSocketId(socket.id);
+      setStatus("idle"); // Now ready to receive files for upload
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("Disconnected from WebSocket server: ", reason);
+      setSocketId(null);
+      setStatus("disconnected"); // No need showing an error here. Generally when user tries to upload and status == disconnected or error, trigger the error message.
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("WebSocket connection error: ", err);
+      setSocketId(null);
+      setStatus("error");
+      setErrorMsg("Cannot connect to server.");
+    });
+
+    // --- Listen for Server Events ---
+    socket.on("uploadProgress", (data) => {
+      setProgress(data.progress);
+
+      if (status !== "parsing file") {
+        // Don't overwrite "parsing file" status
+        setStatus("uploading");
+      }
+    });
+
+    socket.on("uploadStatus", (data) => {
+      console.log("Received status update: ", data);
+      setStatus(data.status); // This could be 'parsing file', 'success', 'error'
+
+      if (data.status === "success") {
+        /**
+         * @description Sets file upload status
+         */
+        setUploadedFile((prev) => ({
+          ...prev,
+          name: selectedFile.name,
+          status: true,
+          id: data.fileId,
+        }));
+        setProgress(100); // Ensure progress hits 100% on success
+      }
+      if (data.status === "error") {
+        setErrorMsg(data.msg || "An unknown error occurred.");
+        setProgress(0); // Reset progress on error
+      }
+
+      // --- Cleanup on component unmount ---
+      return () => {
+        console.log("Disconnecting socket...");
+        socket.disconnect();
+        socketRef.current = null;
+        setSocketId(null);
+      };
+    });
+  }, []);
+
+  const setfileIconColor = (x) => {
     switch (x) {
       case "pdf":
         setSelectedFile((prev) => ({
           ...prev,
-          fileSrc: "/images/pdf.png"
+          fileIconColor: "text-red-500",
         }));
-      case "pptx" || "ppt":
+        break;
+      case "pptx":
+      case "ppt":
         setSelectedFile((prev) => ({
           ...prev,
-          fileSrc: "/images/pptx.png"
+          fileIconColor: "text-orange-500",
         }));
+        break;
       case "txt":
         setSelectedFile((prev) => ({
           ...prev,
-          fileSrc: "/images/txt.png"
+          fileIconColor: "text-gray-500",
         }));
-      case "docx" || "doc":
+        break;
+      case "docx":
+      case "doc":
         setSelectedFile((prev) => ({
           ...prev,
-          fileSrc: "/images/doc.png"
+          fileIconColor: "text-blue-700",
         }));
-      default:
         break;
+      default:
+        setSelectedFile((prev) => ({
+          ...prev,
+          fileIconColor: "text-gray-800",
+        }));
     }
   };
 
   const getAvScoreColor = (pageData) => {
-    if (pageData.stats.averageScore.value >= 70) {
+    const value = pageData.stats.averageScore.value;
+    if (value >= 70) {
       setAvScoreColor((prevState) => ({
         ...prevState,
-        score: "text-green-500",
+        score: "text-green-700",
         progress: "[&>div]:bg-green-500",
+        border: "border-green-100",
       }));
-    } else if (pageData.stats.averageScore.value >= 50) {
+    } else if (value >= 50) {
       setAvScoreColor((prevState) => ({
         ...prevState,
-        score: "text-yellow-500",
+        score: "text-yellow-700",
         progress: "[&>div]:bg-yellow-500",
+        border: "border-yellow-100",
       }));
     } else {
       setAvScoreColor((prevState) => ({
         ...prevState,
-        score: "text-red-500",
-        progress: "[&>div]:bg-red-500",
+        score: "text-red-700",
+        progress: "[&>div]:bg-red-700",
+        border: "border-red-100",
       }));
     }
   };
@@ -230,9 +710,12 @@ const Dashboard = () => {
     }
   };
 
-  const handleSubmission = (event) => {
-    event.target.preventDefault();
+  const handleSubmission = (e) => {
+    e.preventDefault();
     alert("Sent Data for Generation");
+
+    // Submit data for generation
+    
   };
 
   useEffect(() => {
@@ -290,8 +773,8 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="w-full max-w-full bg-gradient-to-b from-gray-50 to-blue-50 ">
-        <header className="w-full grid grid-cols-2 items-center text-slate-500 shadow-sm px-4 md:px-8 py-6">
+      <div className="w-full max-w-full bg-gradient-to-b from-gray-50 to-blue-50">
+        <header className="w-full grid grid-cols-2 items-center text-slate-500 shadow-sm px-4 md:px-8 py-6 z-50 sticky top-0 backdrop-blur-sm bg-white/80">
           {isLoading ? (
             <Skeleton className="w-[100px] h-[32px]" /> // Skeleton for AppLogo
           ) : (
@@ -386,7 +869,7 @@ const Dashboard = () => {
             <WelcomeMsg dashboardData={dashboardData} />
           )}
 
-          <section className="my-8 grid grid-cols-2 gap-3 lg:grid-cols-4 max-[420px]:grid-cols-1">
+          <section className="my-8 grid grid-cols-2 gap-4 lg:grid-cols-4 max-[420px]:grid-cols-1">
             {isLoading ? (
               // Skeleton for 4 Stat Cards
               Array.from({ length: 4 }).map((_, index) => (
@@ -404,22 +887,28 @@ const Dashboard = () => {
             ) : (
               // Actual Stat Cards
               <>
-                <card.Card className="hover:shadow-md ">
+                <card.Card className="flex justify-between gap-5 shadow-sm border-blue-100 transition-all hover:scale-[1.02] min-h-[170px]">
                   <card.CardHeader>
-                    <card.CardDescription className="flex flex-row">
-                      <span className="mr-2 text-sm max-[320px]:text-xs">
-                        Quizzes Taken
-                      </span>
+                    <card.CardDescription className="flex flex-row justify-between">
+                      <div>
+                        <span className="mr-2 text-sm max-[320px]:text-xs">
+                          Quizzes Taken
+                        </span>
 
-                      <ToolTip
-                        text={
-                          "Monthly quota of quizzes generated. This resets at the start of each month"
-                        }
+                        <ToolTip
+                          text={
+                            "Monthly quota of quizzes generated. This resets at the start of each month"
+                          }
+                        />
+                      </div>
+                      <ClipboardList
+                        className="text-blue-500 opacity-80"
+                        size={20}
                       />
                     </card.CardDescription>
                     <card.CardTitle className="text-2xl md:text-3xl font-bold text-blue-900 py-1">
                       {dashboardData?.stats.quizzesTaken.value}{" "}
-                      <span className="text-lg">of</span>{" "}
+                      <span className="text-2xl md:text-3xl">/</span>{" "}
                       {dashboardData?.stats.quizMonthlyQuota.value}
                     </card.CardTitle>
                   </card.CardHeader>
@@ -435,17 +924,23 @@ const Dashboard = () => {
                   </card.CardContent>
                 </card.Card>
 
-                <card.Card className="hover:shadow-md">
+                <card.Card
+                  className={`flex justify-between gap-5 shadow-sm border-red-100 transition-all hover:scale-[1.02] ${avScoreColor.border} min-h-[170px]`}
+                >
                   <card.CardHeader>
-                    <card.CardDescription className="flex flex-row">
-                      <span className="mr-2 text-sm max-[320px]:text-xs">
-                        Average Score
-                      </span>
-                      <ToolTip text="The average score of all quizzes taken this month" />
+                    <card.CardDescription className="flex flex-row justify-between">
+                      <div>
+                        <span className="mr-2 text-sm max-[320px]:text-xs">
+                          Average Score
+                        </span>
+                        <ToolTip text="The average score of all quizzes taken this month" />
+                      </div>
+                      <Gauge className="text-red-500 opacity-80" size={20} />
                     </card.CardDescription>
                     <card.CardTitle className="text-2xl md:text-3xl font-bold py-1">
                       <span className={avScoreColor.score}>
-                        {dashboardData?.stats.averageScore.value}%
+                        {dashboardData?.stats.averageScore.value}
+                        <span className="text-lg font-medium">%</span>
                       </span>
                     </card.CardTitle>
                   </card.CardHeader>
@@ -457,46 +952,54 @@ const Dashboard = () => {
                   </card.CardContent>
                 </card.Card>
 
-                <card.Card className="hover:shadow-md">
+                <card.Card className="flex justify-between gap-5 hover:shadow-sm border-gray-100 hover:scale-[1.02] transition-all min-h-[170px]">
                   <card.CardHeader>
-                    <card.CardDescription className="flex flex-row">
-                      <span className="mr-2 text-sm max-[320px]:text-xs">
-                        Quizzes Created
-                      </span>
-                      <ToolTip text={"Total number of quizzes ever created."} />
+                    <card.CardDescription className="flex flex-row justify-between">
+                      <div>
+                        <span className="mr-2 text-sm max-[320px]:text-xs">
+                          Quiz Created
+                        </span>
+                        <ToolTip
+                          text={"Total number of quizzes ever created."}
+                        />
+                      </div>
+                      <FileStack
+                        className="text-gray-900 opacity-80"
+                        size={20}
+                      />
                     </card.CardDescription>
                     <card.CardTitle className="text-2xl md:text-3xl font-bold text-purple-700 py-1">
                       {dashboardData?.stats.quizzesCreated.value}
                     </card.CardTitle>
                   </card.CardHeader>
-                  <card.CardContent>
-                    <Progress
-                      value={dashboardData?.stats.quizzesCreated.value}
-                      className="[&>div]:bg-purple-500"
-                    />
-                  </card.CardContent>
                 </card.Card>
 
-                <card.Card className="hover:shadow-md">
+                <card.Card className="flex justify-between gap-5 hover:shadow-sm border-yellow-100 hover:scale-[1.02] transition-all min-h-[170px]">
                   <card.CardHeader>
-                    <card.CardDescription className="flex flex-row">
-                      <span className="mr-2 text-sm max-[320px]:text-xs">
-                        Saved Quizzes
-                      </span>
-                      <ToolTip
-                        text={"Total number of quizzes currently in saved"}
+                    <card.CardDescription className="flex flex-row justify-between">
+                      <div>
+                        <span className="mr-2 text-sm max-[320px]:text-xs">
+                          Saved Quizzes
+                        </span>
+                        <ToolTip
+                          text={"Total number of quizzes currently in saved"}
+                        />
+                      </div>
+                      <SaveIcon
+                        className="text-gray-900 opacity-80"
+                        size={20}
                       />
                     </card.CardDescription>
                     <card.CardTitle className="text-2xl md:text-3xl font-bold text-yellow-700 py-1">
                       {dashboardData?.stats.savedQuizzes.value}
                     </card.CardTitle>
                   </card.CardHeader>
-                  <card.CardContent>
+                  {/* <card.CardContent>
                     <Progress
                       value={dashboardData?.stats.savedQuizzes.value}
                       className="[&>div]:bg-yellow-500"
                     />
-                  </card.CardContent>
+                  </card.CardContent> */}
                 </card.Card>
               </>
             )}
@@ -506,98 +1009,291 @@ const Dashboard = () => {
           <section className="grid lg:grid-cols-[2fr_1fr] gap-0 sm:gap-5 lg:mt-12 lg:relative lg:items-start">
             {/* Generate Quiz Card - Assuming this doesn't need a skeleton based on main isLoading */}
             <card.Card className="shadow-lg lg:sticky lg:bottom-0">
-              <form>
+              <form onSubmit={handleSubmission}>
                 <card.CardHeader className="bg-gray-50 p-5">
                   <card.CardTitle className="font-medium text-lg">
                     Generate New Quiz
                   </card.CardTitle>
                   <card.CardDescription>
-                    Upload a document and customize your quiz
+                    Upload a document or provide a URL to customize your quiz
                   </card.CardDescription>
                 </card.CardHeader>
 
-                <card.CardContent>
-                  <Label className="font-medium block text-sm my-3 text-gray-700">
-                    Upload Document
+                <card.CardContent className="space-y-2">
+                  <Label className="font-medium text-sm my-3 text-gray-700 flex justify-between ">
+                    <span>Upload Document</span>
+                    <Button
+                      variant="outline"
+                      onClick={(e) => loadPrevUploaded(e)}
+                      className="text-xs px-2 py-1 cursor-pointer"
+                      size={16}
+                    >
+                      {prevUploadsLoading ? (
+                        <LoadingSpinner size={14} />
+                      ) : (
+                        <>
+                          <ListRestart /> Use Previous
+                        </>
+                      )}
+                    </Button>
                   </Label>
+                  {displayPrevUploaded && (
+                    <PreviouslyUploaded
+                      prevUploads={prevUploads}
+                      selectedFile={selectedFile}
+                      setSelectedFile={setSelectedFile}
+                      setUploadedFile={setUploadedFile}
+                      setDisplayPrevUploads={setDisplayPrevUploads}
+                      setUserStartPage={setUserStartPage}
+                      setUserEndPage={setUserEndPage}
+                      getfileIconColor={getfileIconColor}
+                    />
+                  )}
 
                   {/* Upload Area */}
-                  <div
-                    className={`relative flex items-center justify-center w-full rounded-lg border-2 border-dashed border-gray-300 transition-all duration-200 mb-6 ${
-                      isDragging
-                        ? "border-blue-500 bg-blue-50 scale-105 shadow-inner"
-                        : "bg-white hover:bg-gray-50"
-                    } ${isGenerating ? "cursor-not-allowed bg-gray-100" : ""}`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
-                    {isGenerating && (
-                      <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg z-10">
-                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                      </div>
-                    )}
-                    <label
-                      htmlFor="file-dropzone"
-                      className={`flex flex-col items-center justify-center w-full h-32 sm:h-36 p-4 text-center transition-colors ${
-                        isGenerating
-                          ? "cursor-not-allowed text-gray-400"
-                          : isDragging
-                          ? "cursor-copy text-blue-600"
-                          : "cursor-pointer text-gray-500 hover:bg-gray-50"
-                      }`}
+                  <AnimatePresence>
+                    <motion.div
+                      key={selectedFile.name ? "file-selected" : "no-file"}
+                      initial={{ opacity: 0, height: 0, y: 20 }}
+                      animate={{ opacity: 1, height: "auto", y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: 20 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      <CloudUpload
-                        className={`w-8 h-8 sm:w-10 sm:h-10 mb-3 transition-transform ${
-                          isDragging && !isGenerating ? "animate-bounce" : ""
-                        } ${selectedFile.extension && selectedFile.fileSrc && "hidden"}`}
-                      />
-                      <img
-                        src={selectedFile.extension && selectedFile.fileSrc}
-                        className={`hidden ${
-                          selectedFile.extension &&
-                          selectedFile.fileSrc &&
-                          "block w-8 h-8 sm:w-10 sm:h-10 mb-3"
-                        }`}
-                      />
-                      {!selectedFile.name ? (
-                        <>
-                          <p className="mb-1 text-xs sm:text-sm">
-                            <span className="font-semibold hover:text-blue-300 hover:underline">
-                              Click to upload
-                            </span>{" "}
-                            or drag and drop
-                          </p>
-                          <p className="text-xs">
-                            PDF, DOCX, TXT, PPTX (MAX. 50MB)
-                          </p>
-                        </>
-                      ) : (
-                        <p
-                          className={`text-sm ${uploadClassNames} font-medium flex items-center break-all px-2`}
+                      {!selectedFile.name && !displayPrevUploaded && (
+                        <div
+                          className={`relative flex items-center justify-center w-full rounded-lg border-2 border-dashed border-gray-300 transition-all duration-200 mb-6 ${
+                            isDragging
+                              ? "border-blue-500 bg-blue-50 scale-105 shadow-inner"
+                              : "bg-white hover:bg-gray-50"
+                          } ${
+                            isGenerating ? "cursor-not-allowed bg-gray-100" : ""
+                          }`}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDropOrSelect(e, true)}
                         >
-                          <FileText
-                            size={16}
-                            className="inline mr-1.5 shrink-0"
-                          />
+                          {isGenerating && (
+                            <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg z-10">
+                              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                            </div>
+                          )}
+                          <label
+                            htmlFor="file-dropzone"
+                            className={`flex flex-col items-center justify-center w-full h-32 sm:h-36 p-4 text-center transition-colors group ${
+                              isGenerating
+                                ? "cursor-not-allowed text-gray-400"
+                                : isDragging
+                                ? "cursor-copy text-blue-600"
+                                : "cursor-pointer text-gray-500 hover:bg-gray-50"
+                            }`}
+                          >
+                            <CloudUpload
+                              className={`w-8 h-8 sm:w-10 sm:h-10 mb-3 transition-transform group-hover:text-blue-600 ${
+                                isDragging && !isGenerating
+                                  ? "animate-bounce"
+                                  : ""
+                              } ${
+                                selectedFile.extension &&
+                                selectedFile.fileIconColor &&
+                                "hidden"
+                              }`}
+                            />
 
-                          {uploadText}
-                        </p>
+                            {!selectedFile.name ? (
+                              <>
+                                <p className="mb-1 text-xs sm:text-sm group-hover:text-blue-600">
+                                  <span className="font-semibold group-hover:text-blue-600">
+                                    Click to upload
+                                  </span>{" "}
+                                  or drag and drop
+                                </p>
+                                <p className="text-xs group-hover:text-blue-600">
+                                  PDF, DOCX, TXT, PPTX (MAX. 50MB)
+                                </p>
+                              </>
+                            ) : (
+                              <p
+                                className={`text-sm ${uploadClassNames} font-medium flex items-center break-all px-2`}
+                              >
+                                <FileText
+                                  size={16}
+                                  className={`inline mr-1.5 shrink-0`}
+                                />
+
+                                {uploadText}
+                              </p>
+                            )}
+                            <Input
+                              ref={inputElem}
+                              name="fileId"
+                              id="file-dropzone"
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.docx,.doc,.txt,.ppt,.pptx"
+                              disabled={isGenerating}
+                              onChange={(e) => handleDropOrSelect(e, false)}
+                            />
+                          </label>
+                        </div>
                       )}
-                      <Input
-                        name="fileId"
-                        id="file-dropzone"
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.docx,.doc,.txt,.ppt,.pptx"
-                        disabled={isGenerating}
-                      />
-                    </label>
-                  </div>
+                      {!displayPrevUploaded && (
+                        <>
+                          {/* Only show this component when there is a selected file. This will be useful when user selects file from previously uploaded. 
+      
+      That is, we just show this again but change select status to true
+       */}
+                          {/* Make sure to clear the state for this to be cleared on error */}
+                          {selectedFile.name && (
+                            <section className="bg-gray-50 py-4 px-4 rounded-md border space-y-3">
+                              {/* For the top part */}
+                              <div>
+                                <div className="flex justify-between items-start w-full">
+                                  <div className="flex flex-row items-center justify-center gap-3">
+                                    <FileText
+                                      className={`${selectedFile.fileIconColor} w-6`}
+                                      size={20}
+                                    />
+                                    <div className="">
+                                      <span className="text-gray-800 font-medium truncate text-sm block">
+                                        {selectedFile.name}
+                                      </span>
+                                      <span className="text-gray-500 text-xs block">
+                                        {selectedFile.size}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    className="h-7 w-7 shrink-0 group hover:bg-red-100 bg-transparent border-none shadow-none align-top rounded-lg p-0"
+                                    variant="outline"
+                                    disabled={isGenerating}
+                                    onClick={
+                                      !isUploading && uploadedFile.id // When file is already uploaded and we are not uploading anymore
+                                        ? (e) => clearUpload(e) // helps cancel upload when <Trash2/>
+                                        : (e) => cancelUpload(e) // helps clear uploaded when <X/>
+                                    }
+                                  >
+                                    {!isUploading && uploadedFile.id ? (
+                                      <Trash2
+                                        className="text-gray-500 group-hover:text-red-600"
+                                        size={14}
+                                      />
+                                    ) : (
+                                      <X
+                                        className="text-gray-500 group-hover:text-red-600"
+                                        size={14}
+                                      />
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+                              {uploadedFile.id ? (
+                                <div className="flex items-center gap-2 text-sm text-green-600">
+                                  <CircleCheck size={15} />
+                                  {selectedFile.name} uploaded successfully!
+                                </div>
+                              ) : (
+                                <div className="flex justify-center items-center gap-3 my-4">
+                                  <Progress
+                                    className="[&>*]:bg-blue-500"
+                                    value={progress}
+                                  />
+                                  <div className="text-xs text-blue-600 font-semibold">
+                                    {status === "parsing file" ? (
+                                      <LoadingSpinner size={14} />
+                                    ) : (
+                                      progress + "%"
+                                    )}
+                                  </div>
+                                </div>
+                              )}
 
-                  <Separator />
+                              {/* // Only show range when file has been uploaded */}
+                              {/* If file uploaded is .txt, this range filled will not be displayed */}
+                              {/* Last check sees that both start and end are not the same. some files may be just one page. In that case, don't display ts */}
 
-                  <fieldset disabled={isGenerating} className="my-5">
+                              {uploadedFile.id &&
+                                uploadedFile.range.start !=
+                                  uploadedFile.range.end && (
+                                  <motion.div
+                                    // key="page-range" // Crucial for animation stability
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="pt-3 border-t border-gray-200"
+                                  >
+                                    <div className="space-y-3 text-gray-500">
+                                      <Label className="text-xs text-gray-500">
+                                        <span>
+                                        Specify Page Range (Optional)
+
+                                        </span>
+                                        <ToolTip text={`This file ranges from page ${uploadedFile.range.start} to ${uploadedFile.range.end}`}/>
+                                      </Label>
+
+                                      <div className="flex items-center gap-3">
+                                        <Input
+                                          name="start"
+                                          value={userStartPage}
+                                          onChange={handleStartChange}
+                                          className="w-20 h-8 text-sm"
+                                          // aria-invalid={!!rangeErrors.start}
+                                        />
+                                        <span className="text-gray-400">-</span>
+                                        <Input
+                                          name="end"
+                                          value={userEndPage}
+                                          onChange={handleEndChange}
+                                          className="w-20 h-8 text-sm"
+                                          // aria-invalid={!!rangeErrors.end}
+                                        />
+                                      </div>
+
+                                      {rangeErrors.start && (
+                                        <p className="text-xs text-red-500">
+                                          {rangeErrors.start}
+                                        </p>
+                                      )}
+                                      {rangeErrors.end && (
+                                        <p className="text-xs text-red-500">
+                                          {rangeErrors.end}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </motion.div>
+                                )}
+                            </section>
+                          )}
+                        </>
+                      )}
+
+                      {!selectedFile.name && !displayPrevUploaded && (
+                        <div>
+                          <div className="flex justify-between items-center gap-5 text-gray-500">
+                            <Separator className="flex-1" />
+                            <span className="text-xs">OR</span>
+                            <Separator className="flex-1" />
+                          </div>
+
+                          {/* Section for adding file link */}
+                          <div className="flex justify-between items-center gap-2 py-6">
+                            <Link2 className="text-gray-400" />
+                            <Input
+                              placeholder="Place URL here (e.g., public webpage, document link)"
+                              className="text-sm"
+                            />
+                            <Button disabled={true}>Coming Soon!</Button>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+
+                  <Separator className={selectedFile.name && "my-6"} />
+
+                  <fieldset
+                    disabled={isGenerating || !uploadedFile.id}
+                    className="my-5 disabled:opacity-80"
+                  >
                     <h3 className="font-medium text-gray-800 ">
                       Customize Quiz
                     </h3>
@@ -609,22 +1305,7 @@ const Dashboard = () => {
                           htmlFor="difficulty-group"
                         >
                           <span className="text-gray-700">Difficulty</span>
-                          <tooltip.TooltipProvider>
-                            <tooltip.Tooltip>
-                              <tooltip.TooltipTrigger className="cursor-help">
-                                <Info
-                                  size={14}
-                                  className="hover:text-blue-700 text-gray-400"
-                                />
-                              </tooltip.TooltipTrigger>
-                              <tooltip.TooltipContent className="text-sm">
-                                Normal offers standard questions. <br />
-                                Select hard to attempt more complex phrasing{" "}
-                                <br />
-                                and trickier options.
-                              </tooltip.TooltipContent>
-                            </tooltip.Tooltip>
-                          </tooltip.TooltipProvider>
+                          <ToolTip text="Normal offers standard questions. Select hard to attempt more complex phrasing and trickier options." />
                         </Label>
 
                         <ToggleGroup
@@ -668,21 +1349,7 @@ const Dashboard = () => {
                           htmlFor="mode-group"
                         >
                           <span className="text-gray-700">Mode</span>
-                          <tooltip.TooltipProvider>
-                            <tooltip.Tooltip>
-                              <tooltip.TooltipTrigger className="cursor-help">
-                                <Info
-                                  size={14}
-                                  className="hover:text-blue-700 text-gray-400"
-                                />
-                              </tooltip.TooltipTrigger>
-                              <tooltip.TooltipContent className="text-sm">
-                                Study mode provides instant feedback. <br />
-                                Exam mode show results only at the end. <br />
-                                and trickier options.
-                              </tooltip.TooltipContent>
-                            </tooltip.Tooltip>
-                          </tooltip.TooltipProvider>
+                          <ToolTip text="Study mode provides instant feedback. Exam mode show results only at the end." />
                         </Label>
 
                         <ToggleGroup
@@ -729,27 +1396,23 @@ const Dashboard = () => {
                         >
                           <div className="text-gray-700 flex items-center gap-3 mb-3">
                             <span>Number of Questions</span>
-                            <tooltip.TooltipProvider>
-                              <tooltip.Tooltip>
-                                <tooltip.TooltipTrigger className="cursor-help">
-                                  <Info
-                                    size={14}
-                                    className="hover:text-blue-700 text-gray-400"
-                                  />
-                                </tooltip.TooltipTrigger>
-                                <tooltip.TooltipContent className="text-sm">
-                                  Select Auto to generate as many high-yield
-                                  questions <br />
-                                  as possible from the document. Questions are
-                                  capped at 100
-                                </tooltip.TooltipContent>
-                              </tooltip.Tooltip>
-                            </tooltip.TooltipProvider>
+                            <ToolTip
+                              text="Select Auto to generate as many high-yield
+                                  questions as possible from the document. Questions are
+                                  capped at 60"
+                            />
                           </div>
                           <select.Select
                             name="noOfQuestions"
                             value={noOfQuestions}
-                            onChange={(e) => setNoOfQuestions(e.current.value)}
+                            onValueChange={(value) => { // this is an onValueChnage handler. it gives a param of value NOT e
+                              // When this value is "auto", disable time limit field, not the toggle
+                              console.log(value) 
+                              setNoOfQuestions(value)
+                            }}
+                            disabled={
+                              isGenerating || isLoading || !uploadedFile.id
+                            }
                           >
                             <select.SelectTrigger
                               className="max-w-[135px] w-[135px] !text-gray-700"
@@ -783,27 +1446,20 @@ const Dashboard = () => {
                         >
                           <div className="flex gap-3 flex-shrink">
                             <span>Time Limit</span>
-                            <tooltip.TooltipProvider>
-                              <tooltip.Tooltip>
-                                <tooltip.TooltipTrigger className="cursor-help">
-                                  <Info
-                                    size={14}
-                                    className="hover:text-blue-700 text-gray-400"
-                                  />
-                                </tooltip.TooltipTrigger>
-                                <tooltip.TooltipContent className="text-sm text-center">
-                                  {!isTimeLimit ? (
-                                    <>
-                                      Enable to set time limit for taking quiz.
-                                      <br />
-                                      Capped at 150mins
-                                    </>
-                                  ) : (
-                                    "Set time limit"
-                                  )}
-                                </tooltip.TooltipContent>
-                              </tooltip.Tooltip>
-                            </tooltip.TooltipProvider>
+                            <ToolTip
+                              text={
+                                !isTimeLimit ? (
+                                  <>
+                                    Enable to set a time limit.
+                                    <br />
+                                    Capped at 150mins
+                                    
+                                  </>
+                                ) : (
+                                  "Please note that if number of questions is set to auto, the model will auto generate the timeLimit"
+                                )
+                              }
+                            />
                           </div>
                           <Switch
                             id="activate-time"
@@ -826,14 +1482,16 @@ const Dashboard = () => {
                                 <Input
                                   name="timeLimit"
                                   id="timeLimit"
-                                  value={timeLimit}
+                                  disabled={noOfQuestions === "auto" && true}
+                                  
+                                  value={noOfQuestions === "auto" ? "" : timeLimit} 
                                   min="1"
                                   max="150"
                                   type="number"
                                   className="max-w-[135px] w-[135px] text-sm"
                                   onChange={(e) => validateTimeLimit(e)}
                                 />
-                                minutes
+                                <span className={`${noOfQuestions === "auto" && "text-gray-400"}`}>minutes</span>
                               </Label>
                             </motion.div>
                           </>
@@ -857,8 +1515,8 @@ const Dashboard = () => {
                 <card.CardFooter className="bg-gray-50 py-6">
                   <Button
                     className="w-full bg-blue-600 text-white py-5 hover:bg-blue-700 cursor-pointer"
-                    onSubmit={(e) => handleSubmission(e)}
-                    disabled={isGenerating || isLoading}
+                    type="submit"
+                    disabled={isGenerating || isLoading || !uploadedFile.id}
                   >
                     <CirclePlus />
                     Generate Quiz
@@ -1019,6 +1677,7 @@ const Dashboard = () => {
             </div>
           </section>
         </main>
+        <ToastContainer />
       </div>
     </>
   );
