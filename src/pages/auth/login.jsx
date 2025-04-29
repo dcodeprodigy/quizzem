@@ -9,6 +9,7 @@ import Slider from "../../components/Slider";
 import { ToastContainer, toast, Flip } from "react-toastify";
 import axios from "axios"
 import LoadingDots from "@/components/LoadingDots";
+import { LoadingToast } from "@/utils/toast";
 
 const Tags = () => {
   return (
@@ -28,19 +29,7 @@ const LeftSection = () => {
   );
 };
 
-function displayLoadingToast(msg) {
-      return toast.loading(msg, {
-        position: "bottom-center",
-        autoClose: false,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Flip,
-      });
-  }
+
 
 
 
@@ -62,19 +51,14 @@ const LoginPage = () => {
   
     try {
       setIsLoading(true);
-      toastId = displayLoadingToast("Logging you in...");
+      toastId = LoadingToast("Logging you in...");
   
       const response = await axios.post("http://localhost:5000/api/auth/login", {
         email: formState.email,
         password: formState.password,
       });
-  
-      toastId = toast.update(toastId, {
-        render: "Login Success! Redirecting...",
-        type: "success",
-        isLoading: false,
-        autoClose: 5000,
-      });
+
+      toastId = LoadingToast("Login Success! Redirecting...", toastId, "success");
   
       localStorage.setItem("token", response.data?.token);
       await new Promise (resolve => setTimeout(resolve, 2500));
@@ -86,12 +70,7 @@ const LoginPage = () => {
       // append errors to state
       if (error?.response?.msgs) {
         const response = error.response.data;
-        toastId = toast.update(toastId, {
-          render: "Input validation failed.",
-          isLoading: false,
-          type: "error",
-          autoClose: 3000,
-        });
+        toastId = LoadingToast("Input validation failed.", toastId, "error");
   
         response.msgs.map((msg) => {
           return setErrors((prevErrors) => ({
@@ -101,12 +80,8 @@ const LoginPage = () => {
         });
       } else {
         // Toast Notification
-        toastId = toast.update(toastId, {
-          render: error?.response?.msg || error?.data?.msg || error?.response?.statusText || "Unknown error",
-          type: "error",
-          isLoading: false,
-          autoClose: 5000,
-        });
+        const toastMsg = error?.response?.msg || error?.data?.msg || error?.response?.statusText || "Unknown error";
+        toastId = LoadingToast(toastMsg, toastId, "error");
       }
     }
   };
