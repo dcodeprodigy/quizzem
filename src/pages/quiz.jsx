@@ -58,7 +58,8 @@ const QuizPage = ({ isExam }) => {
   const [disableButtons, setDisableButtons] = useState(true);
   const [scoreCount, setScoreCount] = useState(0);
   const quizCard = useRef(null);
-  const [questionsAnswered, setQuestionsAnswered] = useState(0)
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(60 * 20);
 
   const scrollIntoView = (Elem) => {
     // Scroll an element into view
@@ -453,7 +454,6 @@ const QuizPage = ({ isExam }) => {
 
     
   }, [loadingError]);
-
   
   return (
     <>
