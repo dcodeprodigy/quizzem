@@ -1,240 +1,499 @@
 {
-  "quizId": "mammary-gland-quiz-001",
-  "mode": "exam",
-  "createdAt": {
-    "$date": "2024-01-01T00:00:00.000Z"
-  },
-  "modifiedAt": {
-    "$date": "2024-01-01T00:00:00.000Z"
-  },
-  "title": "Mammary Gland Quiz",
+  "quizId": "68852f83-8b56-4640-a66e-d59632c1f8bf",
+  "mode": "study",
+  "title": "Anatomy Quiz",
   "questions": [
-    {
-      "questionId": "F3dK",
-      "question": "What is the primary blood supply of the mammary gland?",
-      "options": [
-        "Internal thoracic artery",
-        "Axillary artery",
-        "Thoracodorsal artery",
-        "Subclavian artery"
-      ]
-    },
-    {
-      "questionId": "r9Vz",
-      "question": "Which lymph nodes receive the majority of lymphatic drainage from the breast?",
-      "options": [
-        "Axillary lymph nodes",
-        "Parasternal lymph nodes",
-        "Supraclavicular lymph nodes",
-        "Inguinal lymph nodes"
-      ]
-    },
-    {
-      "questionId": "PqA7",
-      "question": "The mammary gland is a modified form of which type of gland?",
-      "options": [
-        "Sebaceous gland",
-        "Apocrine sweat gland",
-        "Endocrine gland",
-        "Eccrine sweat gland"
-      ]
-    },
-    {
-      "questionId": "Zx3H",
-      "question": "What structure suspends the breast and maintains its shape?",
-      "options": [
-        "Suspensory ligaments of Cooper",
-        "Retinacula cutis",
-        "Pectoral fascia",
-        "Clavipectoral fascia"
-      ]
-    },
-    {
-      "questionId": "KM72",
-      "question": "What is the primary venous drainage of the mammary gland?",
-      "options": [
-        "Axillary vein",
-        "Internal thoracic vein",
-        "Cephalic vein",
-        "Brachiocephalic vein"
-      ]
-    },
-    {
-      "questionId": "xBqN",
-      "question": "Which hormone is primarily responsible for milk production in the mammary gland?",
-      "options": ["Oxytocin", "Progesterone", "Prolactin", "Estrogen"]
-    },
-    {
-      "questionId": "NcH2",
-      "question": "Which hormone triggers milk ejection from the mammary gland?",
-      "options": ["Prolactin", "Estrogen", "Oxytocin", "Progesterone"]
-    },
-    {
-      "questionId": "7XzA",
-      "question": "What embryonic layer gives rise to the mammary gland?",
-      "options": ["Ectoderm", "Mesoderm", "Endoderm", "Neural crest"]
-    },
-    {
-      "questionId": "bWk5",
-      "question": "What anatomical landmark is used to describe the location of the nipple?",
-      "options": [
-        "4th intercostal space",
-        "5th intercostal space",
-        "Midclavicular line",
-        "Sternal border"
-      ]
-    },
-    {
-      "questionId": "t83J",
-      "question": "Which nerve supplies sensation to the nipple?",
-      "options": [
-        "Intercostal nerve (T4)",
-        "Phrenic nerve",
-        "Thoracodorsal nerve",
-        "Lateral pectoral nerve"
-      ]
-    },
-    {
-      "questionId": "Y62w",
-      "question": "What is the clinical significance of the 'Peau d'orange' appearance in breast cancer?",
-      "options": [
-        "Indicates lymphatic obstruction",
-        "Benign fibroadenoma",
-        "Infection of mammary ducts",
-        "Sign of normal breast changes"
-      ]
-    },
-    {
-      "questionId": "sLfQ",
-      "question": "Which structure separates the mammary gland from the pectoralis major muscle?",
-      "options": [
-        "Retromammary space",
-        "Cooper's ligaments",
-        "Lateral thoracic fascia",
-        "Axillary sheath"
-      ]
-    },
-    {
-      "questionId": "DR8t",
-      "question": "During mastectomy, which nerve is at risk of injury, leading to winging of the scapula?",
-      "options": [
-        "Long thoracic nerve",
-        "Axillary nerve",
-        "Musculocutaneous nerve",
-        "Thoracodorsal nerve"
-      ]
-    },
-    {
-      "questionId": "zKpM",
-      "question": "What is the function of the Montgomery glands in the areola?",
-      "options": [
-        "Lubricate the nipple",
-        "Produce milk",
-        "Provide pigmentation",
-        "Stimulate lactation"
-      ]
-    },
-    {
-      "questionId": "AQ72",
-      "question": "Which quadrant of the breast has the highest incidence of breast cancer?",
-      "options": [
-        "Upper outer quadrant",
-        "Lower outer quadrant",
-        "Upper inner quadrant",
-        "Lower inner quadrant"
-      ]
-    }
+      {
+          "question": "The basilic vein typically joins which vein to form the axillary vein?",
+          "options": [
+              "Cephalic vein",
+              "Brachial vein",
+              "Subclavian vein",
+              "Median antebrachial vein"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8984"
+      },
+      {
+          "question": "Which superficial vein runs along the lateral aspect of the forearm?",
+          "options": [
+              "Basilic vein",
+              "Median cubital vein",
+              "Cephalic vein",
+              "Brachial vein"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8985"
+      },
+      {
+          "question": "Where does the medial cubital vein end?",
+          "options": [
+              "3.6cm above the medial epicondyle",
+              "3.5cm below the lateral epicondyle",
+              "2.5cm below the medial epicondyle",
+              "2.5cm above the lateral epicondyle"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8986"
+      },
+      {
+          "question": "One of the following is not part of the stomach bed?",
+          "options": [
+              "Right crus of diaphragm",
+              "Splenic artery",
+              "Anterc pancreatic surface",
+              "splenic flexure of colon"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8987"
+      },
+      {
+          "question": "One of the following is false about innervation of the stomach",
+          "options": [
+              "Sympathetic supply originates from 5-12 thorasic spinal segment",
+              "Posterior vagal trunk suppies the fundus and body.",
+              "Posterior nerve of latarget suppies the antrum and pyloric sphincter.",
+              "Selective vagotomy is usually distal to hepatic and coeliac branches"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8988"
+      },
+      {
+          "question": "The following are true about right main bronchus excent",
+          "options": [
+              "It is about 5cm long & It is wider and more vertical than the left",
+              "It is shorter than the left",
+              "Foreign bodies likely enters it",
+              "it slopes about 25 degrees off the vertical"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8989"
+      },
+      {
+          "question": "The dorsal venous arch of the hand primarily drains into which two superficial veins?",
+          "options": [
+              "Basic, and cephalic veins",
+              "Brachial and radial veins",
+              "Median cubital and basilic veins",
+              "Ulnar and radial veins"
+          ],
+          "questionId": "681142a2b0e336ef2aaf898a"
+      },
+      {
+          "question": "The dorsal venous arch on the medial side of the hand drains to what vein?",
+          "options": [
+              "Basilic vein",
+              "Cephalic vein",
+              "Radial vein",
+              "Ulnar vein"
+          ],
+          "questionId": "681142a2b0e336ef2aaf898b"
+      },
+      {
+          "question": "Which of the following is TRUE regarding the venous drainage pattern of the superficial and deer veins of the upper limb?",
+          "options": [
+              "The superficial veins drain directly into the deep veins without any intermediary structures.",
+              "The deep veins are responsible for draining the superficial veins via perforating veins.",
+              "The cephalic vein drains directly into the deep veins of the forearm",
+              "The dorsal venous arch is a deep vein that directly trains into the basilic vein"
+          ],
+          "questionId": "681142a2b0e336ef2aaf898c"
+      },
+      {
+          "question": "Which of the following veins does NOT directly communicate with the dorsal venous arch?",
+          "options": [
+              "Cephalic vein",
+              "Basilic vein",
+              "Radial vein",
+              "Median cubital vein"
+          ],
+          "questionId": "681142a2b0e336ef2aaf898d"
+      },
+      {
+          "question": "A patient presents with a \"claw hand\" deformity after a traumatic injury. which nerve is most likely damaged?",
+          "options": [
+              "Radial nerve",
+              "Median nerve",
+              "Ulnar nerve",
+              "Axillary nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf898e"
+      },
+      {
+          "question": "A patient is unable to oppose the thumb to the little finger. Which nerve is most likely injured?",
+          "options": [
+              "Ulnar nerve",
+              "Radial nerve",
+              "Median nerve",
+              "Axillary nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf898f"
+      },
+      {
+          "question": "A patient pre. ants with numbness over the hypothenar eminence. Which nerve is most likely compromised?",
+          "options": [
+              "Ulnar nerve",
+              "Radial nerve",
+              "Median nerve",
+              "Musculocutaneous nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8990"
+      },
+      {
+          "question": "A 56-year-old woman has difficulty extending her wrist after using cutches. Which nerve is most likely injured?",
+          "options": [
+              "Ulnar nerve",
+              "Radial nerve",
+              "Median nerve",
+              "Musculocutaneous nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8991"
+      },
+      {
+          "question": "Which of the following muscles is part of the thenar eminence?",
+          "options": [
+              "Abductor digit minimi",
+              "Flexor digiti minimi",
+              "Opponens pollicis",
+              "Ado.clor pollicis"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8992"
+      },
+      {
+          "question": "After a knife injury to the wrist, a calient is unable to extend their metacarpophalangeal joints. Which nerve is most likely damaged?",
+          "options": [
+              "Median nerves",
+              "Ulnar nerve",
+              "Radial nerve",
+              "Axillary nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8993"
+      },
+      {
+          "question": "A patient is unable to flex the distal whalanx of the index finger. Which muscle is most likely paralyzed?",
+          "options": [
+              "Flexor digitorum superficialis",
+              "Flexor digitorum profundus",
+              "Flexor pollicis longus",
+              "Extensor indicis"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8994"
+      },
+      {
+          "question": "In which condition does a patient present with numbness of the 4th and 5th fingers and atrophy of the hypothenar muscles?",
+          "options": [
+              "Carpal tunnel syndrome",
+              "Radial tunnel syndrome",
+              "Cubital tunnel syreirome",
+              "Guyon's canal syndrome"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8995"
+      },
+      {
+          "question": "Which nevennervates the lumbrical muscles of the hand?",
+          "options": [
+              "Ulnar nerve",
+              "Radial nerve",
+              "Median and ulnar nerves",
+              "Musculocutaneous nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8996"
+      },
+      {
+          "question": "A radiograph of a 21 year old male shows a fracture in the most lateral carpal bone in the proximal tow, which bone is affected?",
+          "options": [
+              "Scaphoid",
+              "Lunate",
+              "Trapezium",
+              "Triquetrium"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8997"
+      },
+      {
+          "question": "One of the following is not a stabilizing facto of shoulder joint",
+          "options": [
+              "Coracoacromial",
+              "Deepening of glenoid cavity by labrum",
+              "Tendons of rotator cuff muscles",
+              "Capsule"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8998"
+      },
+      {
+          "question": "The following are rotator cuff muscles except",
+          "options": [
+              "Supraspinatus",
+              "Teres major",
+              "Infraspinatus",
+              "Teres minor"
+          ],
+          "questionId": "681142a2b0e336ef2aaf8999"
+      },
+      {
+          "question": "Abduction is brought about by the following muscles except",
+          "options": [
+              "Deltoid",
+              "latissimus dorsi",
+              "supraspinatus",
+              "serratus anterior"
+          ],
+          "questionId": "681142a2b0e336ef2aaf899a"
+      },
+      {
+          "question": "Adduction is brought about by the following muscles except",
+          "options": [
+              "Pectoralis, major",
+              "Teres, major",
+              "latissimus dorsi",
+              "Supraspinatus"
+          ],
+          "questionId": "681142a2b0e336ef2aaf899b"
+      },
+      {
+          "question": "The clavicle is a",
+          "options": [
+              "flat bone",
+              "long bone",
+              "short bone",
+              "sesamoid bone"
+          ],
+          "questionId": "681142a2b0e336ef2aaf899c"
+      },
+      {
+          "question": "Trapezoid ridge is on the inferior surface of the lateral one third of",
+          "options": [
+              "clavicle",
+              "humerus",
+              "ribs",
+              "scapula"
+          ],
+          "questionId": "681142a2b0e336ef2aaf899d"
+      },
+      {
+          "question": "The end of the clavicle articulating with the clavicular notch of the manubrium sterni to form the sternoclavicular joint is",
+          "options": [
+              "lateral",
+              "medial",
+              "Inferoir",
+              "Superior"
+          ],
+          "questionId": "681142a2b0e336ef2aaf899e"
+      },
+      {
+          "question": "The only bone which is subcutaneous throughout is",
+          "options": [
+              "clavicle",
+              "humerus",
+              "radius",
+              "ulna"
+          ],
+          "questionId": "681142a2b0e336ef2aaf899f"
+      },
+      {
+          "question": "The anterior border of the lateral one-third of the shaft of clavicle gives origin to",
+          "options": [
+              "deltoid",
+              "infraspinatus",
+              "trapezius",
+              "sternocleidomastoid"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a0"
+      },
+      {
+          "question": "In nulliparous women, the nipple is usually at",
+          "options": [
+              "6 Intercostal space",
+              "5th intercostal spacu",
+              "4th intercostal space",
+              "3th Intercostal space"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a1"
+      },
+      {
+          "question": "A 35-year-old women complained of a firm painless mass in the upper lateral quadrant of her right breast. The nipple was retracted. Axillary lymph nodes were palpable and firm. She is most likely having?",
+          "options": [
+              "Cancer of the breast",
+              "Fibroadenoma",
+              "Breast Abscess",
+              "Peau d's orange skin"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a2"
+      },
+      {
+          "question": "One of the following is not true concerning female breast",
+          "options": [
+              "The nipple does not contain fat",
+              "The coming montgomery's tubercles",
+              "Its from 2nd to 6th ribs",
+              "The retromammary space separates the breast from pectoralis major"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a3"
+      },
+      {
+          "question": "The following pierce the clavipectoral fascia",
+          "options": [
+              "Lymph vessels",
+              "Cephalic vein",
+              "Mediat pectoral",
+              "Thoracoacromial artery"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a4"
+      },
+      {
+          "question": "One of the following is false bout Triangle of auscultation",
+          "options": [
+              "A Bounded medially by the lateral border of the serratus anterior",
+              "Laterally by the medial border of the scapula",
+              "Inferiorly by the upper border of the latissimus dorsi",
+              "This is the ly part of the back which is not covered by big muscle"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a5"
+      },
+      {
+          "question": "Latissimus dorsi is innervated by",
+          "options": [
+              "Cervical nerve",
+              "Thoracodorsal nerve",
+              "Long thorasic nerve",
+              "Lateral pectoral nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a6"
+      },
+      {
+          "question": "Inflammation of lymph node",
+          "options": [
+              "Lymphangitis",
+              "Lymphoedema",
+              "Lymphadenitis",
+              "Elephantiasis"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a7"
+      },
+      {
+          "question": "The following arteries supply the breast except",
+          "options": [
+              "Suprascapular artery",
+              "Lateral thoracic artery",
+              "Superior thoracic artery",
+              "Subscapular artery"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a8"
+      },
+      {
+          "question": "One of the following is not a member of direct muscles of pectoral girdle",
+          "options": [
+              "Latissimus dorsi",
+              "Subclavius",
+              "Trapezius",
+              "Pectoralis minor"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89a9"
+      },
+      {
+          "question": "One of the following is false about the central tendon of the diaghram",
+          "options": [
+              "It is a thin but strong aponeurosis",
+              "It is a thick but weak aponeurosis",
+              "Trifoliate in shape",
+              "Receives insertion of the muscle fibres"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89aa"
+      },
+      {
+          "question": "One of the following is false about cena caval aperture",
+          "options": [
+              "Located in the central tendon",
+              "at the level of 8 thoracic vurtebrae",
+              "2cm to the left of midline",
+              "behind the 6th costal cartilage"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89ab"
+      },
+      {
+          "question": "Aortic opening transmits the following except",
+          "options": [
+              "Aorta",
+              "Thoracic duct",
+              "Azygos vein",
+              "Lymph vessels"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89ac"
+      },
+      {
+          "question": "One of the following incisions is at the McBurney's point",
+          "options": [
+              "Pfannenstic!",
+              "Paramedian",
+              "gridiron",
+              "Transverse"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89ad"
+      },
+      {
+          "question": "is taferred to as the 'abdominal policeman'",
+          "options": [
+              "greater omentum",
+              "lesser omentum",
+              "Omental bursa",
+              "mesocolon"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89ae"
+      },
+      {
+          "question": "One of the following is odd",
+          "options": [
+              "Retraction",
+              "Invagination",
+              "Circumduction",
+              "Supiration & Extension"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89af"
+      },
+      {
+          "question": "Winged scapula",
+          "options": [
+              "C5, C6",
+              "Radial nerve",
+              "CB T1",
+              "Long thoracic nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89b0"
+      },
+      {
+          "question": "Klumpke's paralysis",
+          "options": [
+              "C5, C6",
+              "Radial nerve",
+              "CB T1",
+              "Long thoracic nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89b1"
+      },
+      {
+          "question": "Erb-duchenne paralysis",
+          "options": [
+              "C5, C6",
+              "Radial nerve",
+              "CB T1",
+              "Long thoracic nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89b2"
+      },
+      {
+          "question": "Crutch paralysis",
+          "options": [
+              "C5, C6",
+              "Radial nerve",
+              "CB T1",
+              "Long thoracic nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89b3"
+      },
+      {
+          "question": "Saturday night palsy",
+          "options": [
+              "C5, C6",
+              "Radial nerve",
+              "CB T1",
+              "Long thoracic nerve"
+          ],
+          "questionId": "681142a2b0e336ef2aaf89b4"
+      }
   ],
-  "answers": [
-    {
-      "questionId": "F3dK",
-      "correctAnswer": "Internal thoracic artery",
-      "userSelectedAnswer": null,
-      "explanation": "The internal thoracic artery provides the major blood supply to the mammary gland."
-    },
-    {
-      "questionId": "r9Vz",
-      "correctAnswer": "Axillary lymph nodes",
-      "userSelectedAnswer": null,
-      "explanation": "About 75% of the lymph from the breast drains into the axillary lymph nodes."
-    },
-    {
-      "questionId": "PqA7",
-      "correctAnswer": "Apocrine sweat gland",
-      "userSelectedAnswer": null,
-      "explanation": "The mammary gland is a modified apocrine sweat gland."
-    },
-    {
-      "questionId": "Zx3H",
-      "correctAnswer": "Suspensory ligaments of Cooper",
-      "userSelectedAnswer": null,
-      "explanation": "The suspensory ligaments of Cooper provide structural support to the breast."
-    },
-    {
-      "questionId": "KM72",
-      "correctAnswer": "Axillary vein",
-      "userSelectedAnswer": null,
-      "explanation": "The axillary vein receives most of the venous drainage from the mammary gland."
-    },
-    {
-      "questionId": "xBqN",
-      "correctAnswer": "Prolactin",
-      "userSelectedAnswer": null,
-      "explanation": "Prolactin stimulates milk production in the mammary gland."
-    },
-    {
-      "questionId": "NcH2",
-      "correctAnswer": "Oxytocin",
-      "userSelectedAnswer": null,
-      "explanation": "Oxytocin stimulates the contraction of myoepithelial cells, leading to milk ejection."
-    },
-    {
-      "questionId": "7XzA",
-      "correctAnswer": "Ectoderm",
-      "userSelectedAnswer": null,
-      "explanation": "The mammary gland develops from the ectoderm."
-    },
-    {
-      "questionId": "bWk5",
-      "correctAnswer": "4th intercostal space",
-      "userSelectedAnswer": null,
-      "explanation": "The nipple is typically located at the level of the 4th intercostal space."
-    },
-    {
-      "questionId": "t83J",
-      "correctAnswer": "Intercostal nerve (T4)",
-      "userSelectedAnswer": null,
-      "explanation": "The intercostal nerve (T4) provides sensory innervation to the nipple."
-    },
-    {
-      "questionId": "Y62w",
-      "correctAnswer": "Indicates lymphatic obstruction",
-      "userSelectedAnswer": null,
-      "explanation": "Peau d'orange is caused by lymphatic obstruction, leading to skin dimpling."
-    },
-    {
-      "questionId": "sLfQ",
-      "correctAnswer": "Retromammary space",
-      "userSelectedAnswer": null,
-      "explanation": "The retromammary space allows movement of the breast over the pectoralis major muscle."
-    },
-    {
-      "questionId": "DR8t",
-      "correctAnswer": "Long thoracic nerve",
-      "userSelectedAnswer": null,
-      "explanation": "The long thoracic nerve supplies the serratus anterior, and its injury causes scapular winging."
-    },
-    {
-      "questionId": "zKpM",
-      "correctAnswer": "Lubricate the nipple",
-      "userSelectedAnswer": null,
-      "explanation": "Montgomery glands secrete lubricating substances to protect the nipple during breastfeeding."
-    },
-    {
-      "questionId": "AQ72",
-      "correctAnswer": "Upper outer quadrant",
-      "userSelectedAnswer": null,
-      "explanation": "The upper outer quadrant has the highest incidence of breast cancer due to the high density of glandular tissue."
-    }
-  ]
+  "prevStates": [],
+  "unfinishedState": {}
 }

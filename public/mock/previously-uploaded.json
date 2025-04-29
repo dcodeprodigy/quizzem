@@ -1,0 +1,32 @@
+[
+  {
+    "fileId": "1234567890abcdef",
+    "fileName": "Vishram Singh - Upper Limb - 4th Edition.pdf",
+    "fileSize": 12345678
+  },
+  {
+    "fileId": "23478987654321",
+    "fileName": "BIC Lecture Slide - Carbohydrates.pdf",
+    "fileSize": 23456789
+  },
+  {
+    "fileId": "34567898765432",
+    "fileName": "BIC Lecture Slide - Lipids.ppt",
+    "fileSize": 34567890
+  },
+  {
+    "fileId": "45678909876543",
+    "fileName": "BIC Lecture Slide - Proteins.docx",
+    "fileSize": 45678901
+  },
+  {
+    "fileId": "56789010987654",
+    "fileName": "BIC Lecture Slide - Nucleic Acids.txt",
+    "fileSize": 56789012
+  },
+  {
+    "fileId": "67890121098765",
+    "fileName": "BIC Lecture Slide - Enzymes.pdf",
+    "fileSize": 67890123
+  }
+]
