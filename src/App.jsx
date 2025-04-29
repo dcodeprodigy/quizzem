@@ -20,6 +20,7 @@ function App() {
         {/* study mode */}
         <Route path="/quiz/s/:id" element={<QuizPage isExam={false}/>}/> 
         <Route path="/" element={<Dashboard />}/>
+        <Route path="*" element={<Dashboard />}/>
       </Routes>
     </Router>
   )
