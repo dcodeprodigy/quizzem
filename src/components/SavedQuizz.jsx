@@ -93,7 +93,7 @@ const MapSavedQuizzes = ({ showFullSav, dashboardData }) => {
 
       recentQuizzes.forEach((quiz) => {
         const Elems = (
-          <AccordionItem value={quiz.id} key={quiz.id} className="w-full">
+          <AccordionItem value={quiz.quizId} key={quiz.quizId} className="w-full">
             <Trigger quiz={quiz} />
             <Content quiz={quiz} />
           </AccordionItem>

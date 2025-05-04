@@ -8,6 +8,8 @@ import NoSavedQuiz from "@/components/nosavedquiz";
 import NoQuizHistory from "@/components/noquizhistory";
 import MapSavedQuizzes from "@/components/SavedQuizz";
 import MapQuizHistory from "@/components/QuizzHistory";
+import Description from "@/components/AddedInfo";
+import { Helmet } from "react-helmet-async";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   CircleCheck,
@@ -37,7 +39,7 @@ import {
 import * as card from "@/components/ui/card";
 import * as select from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import ToolTip from "@/components/ToolTip";
+import ToolTip from "@/components/AddedInfo";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { CloudUpload } from "lucide-react";
@@ -58,14 +60,15 @@ import formatBytes from "@/utils/formatBytes";
 import { X } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { ToastContainer } from "react-toastify";
-import { ErrorToast, InfoToast, LoadingToast } from "@/utils/toast";
+import { ErrorToast, InfoToast, LoadingToast, SuccessToast } from "@/utils/toast";
+import OverlayAnimation from "@/components/OverlayAnimation";
 
 const WelcomeMsg = ({ dashboardData }) => {
   return (
     <>
       <div>
         <h1 className="font-bold text-3xl text-gray-800 max-[930px]:text-[clamp(1.5rem,_1rem_+_2.2vw,_2.2rem)] mt-6">
-          Hello there,{" "}
+          Hello, {" "}
           <span className="text-blue-600">{dashboardData?.user.fName}</span>!
         </h1>
         <p className="sm:text-base">Let's get quizzing.</p>
@@ -217,6 +220,9 @@ const Dashboard = () => {
   const startPageInput = useRef(null);
   const [rangeErrors, setRangeErrors] = useState({ start: "", end: "" });
   const [minMaxError, setMinMaxError] = useState("");
+  const additionalInfo = useRef(null);
+  const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   // Use useRef to hold the socket instance
   // This avoids re-renders causing socket re-connections unnecessarily
@@ -237,6 +243,11 @@ const Dashboard = () => {
       const className = "text-green-600";
       setUploadClassNames(className);
     }
+  };
+
+  const overlayAnimation = (value) => {
+    // Pass this to child components if you need to show or hide overlay animation
+    setIsOverlayVisible(value);
   };
 
   const handleStartChange = (e) => {
@@ -374,7 +385,7 @@ const Dashboard = () => {
       let response;
       try {
         response = await axios.get(
-          "http://localhost:5000/api/me/previous-uploads",
+          `${apiUrl}/api/me/previous-uploads`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -461,7 +472,7 @@ const Dashboard = () => {
         try {
           const token = localStorage.getItem("token");
           const response = await axios.post(
-            "http://localhost:5000/api/upload",
+            `${apiUrl}/api/upload`,
             formData,
             {
               headers: {
@@ -494,7 +505,7 @@ const Dashboard = () => {
               fileId: result.fileId,
               fileName: file.name,
               range: result.range,
-              fileSize: result.fileSize
+              fileSize: result.fileSize,
             };
             setPrevUploads((prev) => [...prev, newItem]);
           } else {
@@ -521,7 +532,7 @@ const Dashboard = () => {
 
           resetFile(); // reset selected
 
-          console.log("x", prevUploads, displayPrevUploaded, triedToGetUploads)
+          console.log("x", prevUploads, displayPrevUploaded, triedToGetUploads);
           // Set error message
           setErrorMsg(
             error?.response?.data?.msg ||
@@ -710,19 +721,59 @@ const Dashboard = () => {
     }
   };
 
-  const handleSubmission = (e) => {
+  const handleSubmission = async (e) => {
     e.preventDefault();
-    alert("Sent Data for Generation");
+    try {
+      // Set generating state
+      setIsGenerating(true);
+      const response = await axios.post(
+        `${apiUrl}/api/me/generate-quiz`,
+        {
+          fileId: uploadedFile.id,
+          difficulty: difficultyValue,
+          mode: modeValue,
+          noOfQuestions: noOfQuestions,
+          timeLimit: timeLimit,
+          additionalInfo: additionalInfo.current.value,
+          pageRange: {
+            start: userStartPage,
+            end: userEndPage,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      const quizData = response.data;
+      navigate(
+        `${
+          quizData.mode === "exam"
+            ? `/quiz/e/${quizData.quizId}`
+            : `/quiz/s/${quizData.quizId}`
+        }`,
+        { state: quizData }
+      );
+    } catch (error) {
+      const response = error?.response?.data;
+      console.error(error);
+      ErrorToast(
+        response?.msg || error?.message || "An unexpected error occured."
+      );
+    } finally {
+      setIsGenerating(false);
+    }
 
     // Submit data for generation
-    
   };
 
   useEffect(() => {
     const fetchData = async () => {
       // Simulate Fetch delay
       try {
-        const response = await axios.get("http://localhost:5000/api/users/me", {
+        const response = await axios.get(`${apiUrl}/api/users/me`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -773,6 +824,13 @@ const Dashboard = () => {
 
   return (
     <>
+      <Helmet>
+        <title>
+          {`${dashboardData?.user ? dashboardData?.user.fName.trim() : ""}
+          ${dashboardData?.user ? dashboardData?.user.fName.endsWith("s") ? "'" : "'s" : ""} Dashboard -
+          Quizzem`}
+        </title>
+      </Helmet>
       <div className="w-full max-w-full bg-gradient-to-b from-gray-50 to-blue-50">
         <header className="w-full grid grid-cols-2 items-center text-slate-500 shadow-sm px-4 md:px-8 py-6 z-50 sticky top-0 backdrop-blur-sm bg-white/80">
           {isLoading ? (
@@ -842,10 +900,41 @@ const Dashboard = () => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        className="text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500"
-                        onClick={() => {
-                          localStorage.clear("token");
-                          navigate("/login");
+                        className={`${isLoading ? "opacity-50": "text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500"}`}
+                        disabled={isLoading}
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          const logout = async () => {
+                            try {
+                              setIsLoading(true)
+                              await axios.get(`${apiUrl}/api/auth/logout`, {
+                                withCredentials: true,
+                                headers: {
+                                  Authorization: `Bearer ${localStorage.getItem("token")}`
+                                }
+                              })
+                              localStorage.clear();
+                              SuccessToast("Logout success!");
+                              await new Promise (resolve => setTimeout(resolve, 2500));
+                              setIsLoading(false);
+                              navigate("/login");
+                            } catch (error) {
+                              console.log(error)
+                              setIsLoading(false);
+                              const refresh = error?.response?.data.refresh === true;
+                              if (refresh) {
+                                const x = await refreshAccess();
+                                if (x) {
+                                  return await logout()
+                                } else {
+                                  ErrorToast("Error logging you out.");
+                                }
+                              }
+                              ErrorToast("An error occurred.");
+                            }
+
+                          }
+                          await logout()
                         }}
                       >
                         <LogOut />
@@ -895,7 +984,7 @@ const Dashboard = () => {
                           Quizzes Taken
                         </span>
 
-                        <ToolTip
+                        <Description
                           text={
                             "Monthly quota of quizzes generated. This resets at the start of each month"
                           }
@@ -933,9 +1022,12 @@ const Dashboard = () => {
                         <span className="mr-2 text-sm max-[320px]:text-xs">
                           Average Score
                         </span>
-                        <ToolTip text="The average score of all quizzes taken this month" />
+                        <Description text="The average score of all quizzes taken this month" />
                       </div>
-                      <Gauge className="text-red-500 opacity-80" size={20} />
+                      <Gauge
+                        className={`${avScoreColor.score} opacity-80`}
+                        size={20}
+                      />
                     </card.CardDescription>
                     <card.CardTitle className="text-2xl md:text-3xl font-bold py-1">
                       <span className={avScoreColor.score}>
@@ -959,7 +1051,7 @@ const Dashboard = () => {
                         <span className="mr-2 text-sm max-[320px]:text-xs">
                           Quiz Created
                         </span>
-                        <ToolTip
+                        <Description
                           text={"Total number of quizzes ever created."}
                         />
                       </div>
@@ -1027,6 +1119,7 @@ const Dashboard = () => {
                       onClick={(e) => loadPrevUploaded(e)}
                       className="text-xs px-2 py-1 cursor-pointer"
                       size={16}
+                      disabled={isLoading || isGenerating}
                     >
                       {prevUploadsLoading ? (
                         <LoadingSpinner size={14} />
@@ -1079,16 +1172,24 @@ const Dashboard = () => {
                           )}
                           <label
                             htmlFor="file-dropzone"
-                            className={`flex flex-col items-center justify-center w-full h-32 sm:h-36 p-4 text-center transition-colors group ${
+                            disabled={isLoading}
+                            aria-disabled={isLoading}
+                            className={`flex flex-col items-center justify-center w-full h-32 sm:h-36 p-4 text-center transition-colors ${
+                              !isLoading && "group"
+                            } ${
                               isGenerating
                                 ? "cursor-not-allowed text-gray-400"
                                 : isDragging
                                 ? "cursor-copy text-blue-600"
-                                : "cursor-pointer text-gray-500 hover:bg-gray-50"
+                                : `cursor-pointer text-gray-500 ${
+                                    !isLoading && "hover:bg-gray-50"
+                                  }`
                             }`}
                           >
                             <CloudUpload
-                              className={`w-8 h-8 sm:w-10 sm:h-10 mb-3 transition-transform group-hover:text-blue-600 ${
+                              className={`w-8 h-8 sm:w-10 sm:h-10 mb-3 transition-transform ${
+                                !isLoading && "group-hover:text-blue-600"
+                              }  ${
                                 isDragging && !isGenerating
                                   ? "animate-bounce"
                                   : ""
@@ -1130,7 +1231,7 @@ const Dashboard = () => {
                               type="file"
                               className="hidden"
                               accept=".pdf,.docx,.doc,.txt,.ppt,.pptx"
-                              disabled={isGenerating}
+                              disabled={isGenerating || isLoading}
                               onChange={(e) => handleDropOrSelect(e, false)}
                             />
                           </label>
@@ -1224,10 +1325,11 @@ const Dashboard = () => {
                                     <div className="space-y-3 text-gray-500">
                                       <Label className="text-xs text-gray-500">
                                         <span>
-                                        Specify Page Range (Optional)
-
+                                          Specify Page Range (Optional)
                                         </span>
-                                        <ToolTip text={`This file ranges from page ${uploadedFile.range.start} to ${uploadedFile.range.end}`}/>
+                                        <ToolTip
+                                          text={`This file ranges from page ${uploadedFile.range.start} to ${uploadedFile.range.end}`}
+                                        />
                                       </Label>
 
                                       <div className="flex items-center gap-3">
@@ -1236,6 +1338,7 @@ const Dashboard = () => {
                                           value={userStartPage}
                                           onChange={handleStartChange}
                                           className="w-20 h-8 text-sm"
+                                          disabled={isGenerating}
                                           // aria-invalid={!!rangeErrors.start}
                                         />
                                         <span className="text-gray-400">-</span>
@@ -1244,6 +1347,7 @@ const Dashboard = () => {
                                           value={userEndPage}
                                           onChange={handleEndChange}
                                           className="w-20 h-8 text-sm"
+                                          disabled={isGenerating}
                                           // aria-invalid={!!rangeErrors.end}
                                         />
                                       </div>
@@ -1281,7 +1385,9 @@ const Dashboard = () => {
                               placeholder="Place URL here (e.g., public webpage, document link)"
                               className="text-sm"
                             />
-                            <Button disabled={true}>Coming Soon!</Button>
+                            <Button disabled={true} className="bg-blue-600">
+                              Coming?
+                            </Button>
                           </div>
                         </div>
                       )}
@@ -1294,7 +1400,7 @@ const Dashboard = () => {
                     disabled={isGenerating || !uploadedFile.id}
                     className="my-5 disabled:opacity-80"
                   >
-                    <h3 className="font-medium text-gray-800 ">
+                    <h3 className="font-medium text-gray-800">
                       Customize Quiz
                     </h3>
                     <div className="grid grid-rows-2 sm:grid-cols-2 sm:grid-rows-none sm:gap-8">
@@ -1405,10 +1511,11 @@ const Dashboard = () => {
                           <select.Select
                             name="noOfQuestions"
                             value={noOfQuestions}
-                            onValueChange={(value) => { // this is an onValueChnage handler. it gives a param of value NOT e
+                            onValueChange={(value) => {
+                              // this is an onValueChnage handler. it gives a param of value NOT e
                               // When this value is "auto", disable time limit field, not the toggle
-                              console.log(value) 
-                              setNoOfQuestions(value)
+                              console.log(value);
+                              setNoOfQuestions(value);
                             }}
                             disabled={
                               isGenerating || isLoading || !uploadedFile.id
@@ -1453,7 +1560,6 @@ const Dashboard = () => {
                                     Enable to set a time limit.
                                     <br />
                                     Capped at 150mins
-                                    
                                   </>
                                 ) : (
                                   "Please note that if number of questions is set to auto, the model will auto generate the timeLimit"
@@ -1463,6 +1569,7 @@ const Dashboard = () => {
                           </div>
                           <Switch
                             id="activate-time"
+                            disabled={noOfQuestions === "auto" && true}
                             onCheckedChange={() => setIsTimeLimit(!isTimeLimit)}
                             className="flex-shrink"
                           />
@@ -1483,15 +1590,22 @@ const Dashboard = () => {
                                   name="timeLimit"
                                   id="timeLimit"
                                   disabled={noOfQuestions === "auto" && true}
-                                  
-                                  value={noOfQuestions === "auto" ? "" : timeLimit} 
+                                  value={
+                                    noOfQuestions === "auto" ? "" : timeLimit
+                                  }
                                   min="1"
                                   max="150"
                                   type="number"
                                   className="max-w-[135px] w-[135px] text-sm"
                                   onChange={(e) => validateTimeLimit(e)}
                                 />
-                                <span className={`${noOfQuestions === "auto" && "text-gray-400"}`}>minutes</span>
+                                <span
+                                  className={`${
+                                    noOfQuestions === "auto" && "text-gray-400"
+                                  }`}
+                                >
+                                  minutes
+                                </span>
                               </Label>
                             </motion.div>
                           </>
@@ -1504,6 +1618,7 @@ const Dashboard = () => {
                         Additional Instructions (Optional)
                       </Label>
                       <Textarea
+                        ref={additionalInfo}
                         name="additionalInfo"
                         id="additionalInfo"
                         className="text-sm"
@@ -1514,12 +1629,24 @@ const Dashboard = () => {
                 </card.CardContent>
                 <card.CardFooter className="bg-gray-50 py-6">
                   <Button
-                    className="w-full bg-blue-600 text-white py-5 hover:bg-blue-700 cursor-pointer"
+                    className={`w-full bg-blue-600 text-white py-5 hover:bg-blue-700 cursor-pointer ${
+                      isGenerating &&
+                      "bg-blue-50 border border-blue-500 text-blue-700 font-medium"
+                    }`}
                     type="submit"
                     disabled={isGenerating || isLoading || !uploadedFile.id}
                   >
-                    <CirclePlus />
-                    Generate Quiz
+                    {isGenerating ? (
+                      <div className="w-full flex justify-center items-center gap-3">
+                        <LoadingSpinner size={16} />
+                        <span>Generating your quiz. Please wait!</span>
+                      </div>
+                    ) : (
+                      <>
+                        <CirclePlus />
+                        Generate Quiz
+                      </>
+                    )}
                   </Button>
                 </card.CardFooter>
               </form>
@@ -1627,14 +1754,22 @@ const Dashboard = () => {
                   ) : !dashboardData?.quizHistory?.length ? (
                     <NoQuizHistory />
                   ) : showFullHistory ? (
-                    <MapQuizHistory
-                      showfullHist={true}
-                      dashboardData={dashboardData}
-                    />
+                    <>
+                      <MapQuizHistory
+                        showfullHist={true}
+                        dashboardData={dashboardData}
+                        overlayAnimation={overlayAnimation}
+                        isLoading={isLoading}
+                        setIsLoading={setIsLoading}
+                      />
+                    </>
                   ) : (
                     <MapQuizHistory
                       showfullHist={false}
                       dashboardData={dashboardData}
+                      overlayAnimation={overlayAnimation} // make sure this is here else for some reason the function won't be passed to child
+                      isLoading={isLoading}
+                      setIsLoading={setIsLoading}
                     />
                   )}
                 </card.CardContent>
@@ -1678,6 +1813,7 @@ const Dashboard = () => {
           </section>
         </main>
         <ToastContainer />
+        <OverlayAnimation isVisible={isOverlayVisible} />
       </div>
     </>
   );

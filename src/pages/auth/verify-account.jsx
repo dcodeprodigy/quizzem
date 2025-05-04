@@ -10,6 +10,7 @@ import LoadingDots from "@/components/LoadingDots";
 
 const VerifyAccount = () => {
   const navigate = useNavigate();
+  const apiUrl = import.meta.env.VITE_API_URL;
   const [isLoading, setIsLoading] = useState(true);
   const [serverResponse, setServerResponse] = useState({
     status: null,
@@ -17,7 +18,6 @@ const VerifyAccount = () => {
   });
   const { token: token } = useParams(); // Get the token param from the URL
   const [searchParams, setSearchParams] = useSearchParams(); // Get the email query string from the URL
-
 
   const setResponseFromServer = (res) => {
     setServerResponse((prev) => ({
@@ -32,28 +32,28 @@ const VerifyAccount = () => {
     if (serverResponse.status === 200) {
       return "Email Verified";
     } else if (serverResponse.status === 202) {
-        return "Check inbox for verification email";
+      return "Check inbox for verification email";
     } else {
       return "An error occured";
     }
-  }
+  };
 
   const getImageUrl = () => {
     if (serverResponse.status === 200) {
       return "/images/email-verified-icon.png";
     } else if (serverResponse.status === 202) {
-        return "/images/verify-mail-icon.png";
+      return "/images/verify-mail-icon.png";
     } else {
       return "/images/expired-link-icon.png";
     }
-  }
+  };
 
   useEffect(() => {
     const verifyAccount = async () => {
       // Send Request to Verify Account
       try {
         const response = await axios.post(
-          `http://localhost:5000/api/auth/verify-account/${token}`
+          `${apiUrl}/api/auth/verify-account/${token}`
         );
 
         // Set Server Response
@@ -78,27 +78,28 @@ const VerifyAccount = () => {
     setIsLoading(true);
     console.log(searchParams.get("e"));
     try {
-        const response = await axios.post("http://localhost:5000/api/auth/resend-verification", {
-            e: searchParams.get("e")
-        });
+      const response = await axios.post(
+        `${apiUrl}/api/auth/resend-verification`,
+        {
+          e: searchParams.get("e"),
+        }
+      );
 
-        setResponseFromServer(response);
-        setIsLoading(false);
+      setResponseFromServer(response);
+      setIsLoading(false);
     } catch (error) {
-        console.error(error);
-        setResponseFromServer(error.response);
-        setIsLoading(false);    
+      console.error(error);
+      setResponseFromServer(error.response);
+      setIsLoading(false);
     }
   };
 
   return (
     <>
-    <Helmet>
+      <Helmet>
         <title>Verify Your Account - Quizzem</title>
       </Helmet>
-      <div className="container p-4 m-auto flex flex-col items-center justify-center h-screen">
-        <OverlayAnimation isVisible={isLoading} />
-
+      <div className="container max-w-[65%] p-4 m-auto flex flex-col items-center justify-center h-screen">
         {!isLoading && (
           <div className="bg-white max-w-lg mx-auto p-8 rounded-2xl shadow-md text-center text-gray-800 relative overflow-hidden">
             {/* Subtle blur gradient overlay */}
@@ -117,12 +118,16 @@ const VerifyAccount = () => {
               </h2>
 
               <p className="mb-6 text-gray-700">
-                {serverResponse.status === 400 ?
-                  "The link you clicked has either expired or is invalid." : serverResponse.status >= 500 && "An unknown has error occured."}
+                {serverResponse.status === 400
+                  ? "The link you clicked has either expired or is invalid."
+                  : serverResponse.status >= 500 &&
+                    "An unknown has error occured."}
               </p>
 
               <Button
-                className={`inline-block bg-blue-500 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-600 transition ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}`}
+                className={`inline-block bg-blue-500 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-600 transition ${
+                  isLoading ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
                 onClick={() => {
                   serverResponse.status === 200
                     ? navigate("/dashboard")
@@ -134,8 +139,9 @@ const VerifyAccount = () => {
                   "Proceed to Dashboard"
                 ) : isLoading ? (
                   <LoadingDots />
+                ) : serverResponse.status === 202 ? (
+                  "Ok! Got it"
                 ) : (
-                    serverResponse.status === 202 ? "Ok! Got it" :
                   "Resend Verification Email"
                 )}
               </Button>
@@ -143,7 +149,7 @@ const VerifyAccount = () => {
           </div>
         )}
       </div>
-      
+      <OverlayAnimation isVisible={isLoading} />
     </>
   );
 };

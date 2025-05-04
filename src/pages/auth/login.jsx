@@ -14,7 +14,7 @@ import { LoadingToast } from "@/utils/toast";
 const Tags = () => {
   return (
     <Helmet>
-      <title>Register for Quizzem - Test Your Knowledge</title>
+      <title>Sign in to Your Account to Test Your Knowledge</title>
     </Helmet>
   );
 };
@@ -35,6 +35,7 @@ const LeftSection = () => {
 
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
   const [errors, setErrors] = useState({
     email: "",
@@ -53,7 +54,7 @@ const LoginPage = () => {
       setIsLoading(true);
       toastId = LoadingToast("Logging you in...");
   
-      const response = await axios.post("http://localhost:5000/api/auth/login", {
+      const response = await axios.post(`${apiUrl}/api/auth/login`, {
         email: formState.email,
         password: formState.password,
       });

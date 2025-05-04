@@ -36,9 +36,9 @@ function LoadingSpinner({ size = 40 }) {
     width: `${size}px`,
     height: `${size}px`,
     border: `${borderThickness}px solid rgba(0, 0, 0, 0.1)`,
-    borderTopColor: '#3498db', 
+    borderTopColor: '#1447e6', // Theme color
     borderRadius: '50%',
-    animation: `${spinAnimationName} 1s linear infinite`, 
+    animation: `${spinAnimationName} 2s linear infinite`, 
   };
 
   return (

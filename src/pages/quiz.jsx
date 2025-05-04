@@ -8,7 +8,7 @@ import React, {
 import axios from "axios";
 import AppLogo from "@/components/AppLogo";
 import { UserProvider } from "../../context/user";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Card,
   CardAction,
@@ -44,10 +44,12 @@ import { CircleCheck } from "lucide-react";
 import { CircleX } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { GripVertical } from "lucide-react";
+import refreshAccess from "@/utils/refreshAccess";
+import { ErrorToast } from "@/utils/toast";
 
 const QuizPage = ({ isExam }) => {
   const { id: quizId } = useParams();
-  const [isExamType, setIsExamType] = useState(isExam); // set the mode of the quiz
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(true);
   const [loadingError, setLoadingError] = useState(false);
   const [quizData, setQuizData] = useState({});
@@ -59,7 +61,9 @@ const QuizPage = ({ isExam }) => {
   const [scoreCount, setScoreCount] = useState(0);
   const quizCard = useRef(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const { state } = useLocation();
   const [timeRemaining, setTimeRemaining] = useState(60 * 20);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const scrollIntoView = (Elem) => {
     // Scroll an element into view
@@ -71,38 +75,35 @@ const QuizPage = ({ isExam }) => {
 
   const completeScoreSentence = () => {
     if (isExam) {
-        const percentageDone = (questionsAnswered/quizState.length) * 100
-        return percentageDone.toFixed(1)
+      const percentageDone = (questionsAnswered / quizState.length) * 100;
+      return percentageDone.toFixed(1);
     }
-  }
+  };
 
   const calculateQA = (data) => {
-    console.log("data", data)
+    console.log("data", data);
     // On Mount, run this function, just in case the user is trying to continue a quiz
-    data.questions.map(question => {
-        question.selectedAnswer && setQuestionsAnswered(questionsAnswered + 1);
-    })
-  }
+    data.questions.map((question) => {
+      question.selectedAnswer && setQuestionsAnswered(questionsAnswered + 1);
+    });
+  };
 
   const calculatePercentCorrect = () => {
-    return (
-        (scoreCount / quizData.questions.length) *
-        100
-      ).toFixed(1) + "%"
-  }
+    return ((scoreCount / quizData.questions.length) * 100).toFixed(1) + "%";
+  };
 
   const SubmitConfirmation = () => {
     return (
       <>
         <AlertDialog>
-          <AlertDialogTrigger 
+          <AlertDialogTrigger
             className={`md:!py-2 md:!px-8 !px-2.5 not-disabled:cursor-pointer rounded-md text-sm font-medium text-center shadow-xs ${
               currentQuestion === quizData.questions.length &&
               "!bg-red-600 disabled:!bg-red-200 !text-white"
             }`}
           >
             <span className="hidden md:inline-block ">Submit</span>
-            <ChevronRight className="md:hidden" size={16}/>
+            <ChevronRight className="md:hidden" size={16} />
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -113,7 +114,7 @@ const QuizPage = ({ isExam }) => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => endQuiz}>End</AlertDialogAction>
+              <AlertDialogAction onClick={() => {endQuiz()}}>End</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -121,102 +122,170 @@ const QuizPage = ({ isExam }) => {
     );
   };
 
-  const endQuiz = () => {
+  const endQuiz = async () => {
     // show loading animation
     // send request to save user score
+    const mode = isExam ? "exam" : "study";
+    try {
+      const response = await axios.post(
+        `${apiUrl}/api/me/quiz/submit/${mode}`,
+        {
+          quizId, // we just need this since we have been saving the quiz state in database
+          quizState: isExam && quizState,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (isExam) {
+        // Set new quizState that shall be returned from backend
+        setQuizState((prevState) => {
+          prevState = response.data;
+        });
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      if (error?.response?.data?.refresh) {
+        const x = await refreshAccess();
+        if (x) {
+          return await endQuiz();
+        } else {
+          await new Promise((resolve) =>
+            resolve(setTimeout(ErrorToast("Session expired.")), 2500)
+          );
+          navigate("/login");
+        }
+      }
+    }
+
     // navigate to dashboard page, with newly fetched dashboard data loaded
   };
 
   const nextQuestion = (increment) => {
-    console.log(currentQuestion);
     increment
       ? setCurrentQuestion((prev) => prev + 1)
       : setCurrentQuestion((prev) => prev - 1);
   };
 
   const checkAnswer = async () => {
-    if(!isExam) {
-        setDisableButtons(true);
-        setIsRequesting(true);
-        // Disable check answer button
-        const mutateQuestionState = (disable) => {
-          setQuizState((prevQuizState) => {
-            return prevQuizState.map((questionItem, index) => {
-              if (index === currentQuestion - 1) {
-                return {
-                  ...questionItem,
-                  checkAnswerDisabled: disable,
-                };
-              } else return questionItem;
-            });
+    /**
+     * @remark User can only check answer in study mode
+     */
+    if (!isExam) {
+      setDisableButtons(true);
+      setIsRequesting(true);
+      // Disable check answer button
+      const mutateQuestionState = (disable) => {
+        setQuizState((prevQuizState) => {
+          return prevQuizState.map((questionItem, index) => {
+            if (index === currentQuestion - 1) {
+              return {
+                ...questionItem,
+                checkAnswerDisabled: disable,
+              };
+            } else return questionItem;
           });
-        };
-    
-        mutateQuestionState(true);
-    
-        try {
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-          // Server shall pass only the answer for that particular question ONLY!!!. For now, check answer function may not work.
-        //   const response = await axios.get(
-        //     `/quiz/s/${quizId}/a/${currentQuestion - 1})`
-    
-            const response = await axios.get('/mock/answer.json'); // Get the answer
-          if (!response.status == 200) {
-            return mutateQuestionState(false);
-          } // Show toast error message (when connecting backend)
-    
-          // Set correct answer to quizState
-          setQuizState((prevQuizStates) => {
-            //prevQuizStates is the array of quizState
-            return prevQuizStates.map((prevQuizState, index) => {
-              // prevQuizState is the OBJECT at that index
-              if (index === currentQuestion - 1) {
-                // if current index matches that of current question, mutate the explanation and correctAnswer to reflect the fetched data. Then compare both answer selected and correct one
-                return {
-                  ...prevQuizState,
-                  disableAskAi: false,
-                  explanation: response.data.explanation,
-                  correctAnswer: "Internal thoracic artery", // TODO : replace with answer from backend
-                  isCorrect:
-                  "Internal thoracic artery" == quizState[currentQuestion - 1].selectedAnswer
-                      ? true
-                      : false,
-                };
-              } else return prevQuizState;
-            });
-          });
-    
-          quizState.map((questionState) => {
-            // Increment the scoreCount as appropriate
-            questionState.isCorrect && setScoreCount(scoreCount + 1);
-          });
-        } catch (error) {
-          console.log(error);
-          // re-enable check answer button if there is an error
-          mutateQuestionState(false);
-          // show toast here too
-        } finally {
-          setDisableButtons(false);
-          setIsRequesting(false);
-        }
-
-      }
-    };
-  
-  const updateAskAiField = (newValue) => {
-      setQuizState((prevQuizState) => {
-        return prevQuizState.map((questionState, index) => {
-          if (index === currentQuestion - 1) {
-            return {
-              ...questionState,
-              askAiField: newValue,
-            };
-          } else return questionState;
         });
-      });
-  }
+      };
 
- 
+      mutateQuestionState(true);
+
+      try {
+        // Server shall pass only the answer for that particular question ONLY!!!. For now, check answer function may not work.
+        const questionId = quizState[currentQuestion - 1].questionId;
+        const selectedAnswer = quizState[currentQuestion - 1].selectedAnswer;
+        const response = await axios.post(
+          `${apiUrl}/api/me/quiz/s/answer`,
+          {
+            quizId,
+            questionId,
+            selectedAnswer,
+          },
+          {
+            timeout: 30 * 1000,
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        ); // Get the answer
+        if (!response.status == 200) {
+          return mutateQuestionState(false);
+        } // Show toast error message (when connecting backend)
+
+        // Set correct answer to quizState
+        setQuizState((prevQuizStates) => {
+          //prevQuizStates is the array of quizState
+          return prevQuizStates.map((prevQuizState, index) => {
+            // prevQuizState is the OBJECT at that index
+            if (index === currentQuestion - 1) {
+              const { explanation, correctAnswer } = response.data;
+              // if current index matches that of current question, mutate the explanation and correctAnswer to reflect the fetched data. Then compare both answer selected and correct one
+              return {
+                ...prevQuizState,
+                disableAskAi: false,
+                explanation: explanation,
+                correctAnswer: correctAnswer,
+                isCorrect:
+                  correctAnswer ===
+                  quizState[currentQuestion - 1].selectedAnswer
+                    ? true
+                    : false,
+              };
+            } else return prevQuizState;
+          });
+        });
+
+        response.data.correctAnswer ===
+          quizState[currentQuestion - 1].selectedAnswer &&
+          setScoreCount((prevScore) => prevScore + 1);
+      } catch (error) {
+        const responseObject = error.response;
+
+        if (responseObject?.data?.refresh) {
+          const success = await refreshAccess();
+          if (success) {
+            // if refresh was successful, retry request
+            setIsLoading(true);
+            return await checkAnswer();
+          } else {
+            // if refresh failed, clear local storage and redirect to login
+            localStorage.clear("token");
+            return navigate("/login");
+          }
+        }
+        console.log(error);
+
+        ErrorToast(
+          error?.response?.data?.msg ||
+            error?.response?.data ||
+            "Client Side Error"
+        );
+        // re-enable check answer button if there is an error
+        mutateQuestionState(false);
+        // show toast here too
+      } finally {
+        setDisableButtons(false);
+        setIsRequesting(false);
+      }
+    }
+  };
+
+  const updateAskAiField = (newValue) => {
+    setQuizState((prevQuizState) => {
+      return prevQuizState.map((questionState, index) => {
+        if (index === currentQuestion - 1) {
+          return {
+            ...questionState,
+            askAiField: newValue,
+          };
+        } else return questionState;
+      });
+    });
+  };
 
   const MapOptions = () => {
     const options = quizData["questions"][currentQuestion - 1]["options"];
@@ -236,10 +305,14 @@ const QuizPage = ({ isExam }) => {
         <Button
           key={optionLetter}
           variant="outline"
-          className={`py-7 flex justify-between items-center w-full font-normal border-gray-300 shadow-none rounded-lg not-disabled:cursor-pointer transition-all duration-500 disabled:cursor-not-allowed 
+          className={`py-8 flex justify-between items-center w-full font-normal hover:bg-gray-50 border-gray-300 shadow-none rounded-lg not-disabled:cursor-pointer transition-all duration-500 disabled:cursor-not-allowed ${
+            quizState[currentQuestion - 1].correctAnswer &&
+            "pointer-events-none"
+          }  
+          ${isRequesting && "pointer-events-none"}
           ${
             quizState[currentQuestion - 1]?.selectedAnswer === option &&
-            "border-blue-400  bg-blue-50 ring-2 ring-blue-500 ring-offset-1"
+            "border-blue-400  bg-blue-50 ring-2 ring-blue-500 ring-offset-1 pointer-events-none"
           }
           ${
             quizState[currentQuestion - 1]?.selectedAnswer === option &&
@@ -261,16 +334,15 @@ const QuizPage = ({ isExam }) => {
             quizState[currentQuestion - 1].correctAnswer !== option &&
             "border-red-400  bg-red-50 ring-2 ring-red-500 ring-offset-0"
           }`}
-
           onClick={
             !quizState[currentQuestion - 1].correctAnswer &&
             isRequesting === false
               ? () => {
                   // This means only run this onClick function when we are not requesting and there is no correctAnswer in state
-                  console.log(quizState);
 
                   // Update questions answered state before updating selectedAnswer
-                  !quizState[currentQuestion - 1].selectedAnswer && setQuestionsAnswered(questionsAnswered + 1);
+                  !quizState[currentQuestion - 1].selectedAnswer &&
+                    setQuestionsAnswered(questionsAnswered + 1);
 
                   // Set as selected answer in state
                   setQuizState((prevQuizState) => {
@@ -290,13 +362,12 @@ const QuizPage = ({ isExam }) => {
           }
         >
           {/* This div shows the option letter and option */}
-          <div className="flex gap-3 items-center">
-
+          <div className="flex gap-3 items-center ">
             <span
               // In this classnames we used isCorrect === false and not !isCorrect because a var may be falsy but not false
-              className={`w-7 h-7 flex items-center justify-center text-sm rounded-full border-2 border-gray-400 font-medium ${
-                quizState[currentQuestion - 1]?.selectedAnswer ===
-                option && "bg-blue-500 !border-blue-500 text-white"
+              className={`w-7 h-7 p-3 flex items-center justify-center text-sm rounded-full border-2 border-gray-400 font-medium ${
+                quizState[currentQuestion - 1]?.selectedAnswer === option &&
+                "bg-blue-500 !border-blue-500 text-white"
               }
             ${
               quizState[currentQuestion - 1]?.selectedAnswer === option &&
@@ -316,9 +387,9 @@ const QuizPage = ({ isExam }) => {
               {optionLetter}
             </span>
             <span
-              className={`sm:text-base ${
-                quizState[currentQuestion - 1]?.selectedAnswer ===
-                option && "font-medium"
+              className={`whitespace-normal break-words sm:text-base text-left ${
+                quizState[currentQuestion - 1]?.selectedAnswer === option &&
+                "font-medium"
               }
             ${
               quizState[currentQuestion - 1]?.selectedAnswer === option &&
@@ -360,8 +431,6 @@ const QuizPage = ({ isExam }) => {
       );
     });
 
-
-    console.log(quizState);
     return MappedOptions;
   };
 
@@ -392,37 +461,88 @@ const QuizPage = ({ isExam }) => {
     );
   };
 
-
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Use id from param to fetch quiz from database, while initially displaying loading spinner
-        const quizReq = await axios.get("/mock/quiz.json"); // TODO: Replace this with the quizId to backend
-        if (quizReq.status !== 200) return setLoadingError(true); // so that user can retry
-        const quizData = quizReq.data;
-        console.log(quizData);
+        let quizData;
+        if (!state) {
+          try {
+            const quizReq = await axios.get(
+              `${apiUrl}/api/me/quizzes/${quizId}`,
+              {
+                timeout: 30 * 1000,
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            );
+            quizData = quizReq.data;
+          } catch (error) {
+            if (error?.response?.data?.refresh) {
+              const x = await refreshAccess();
+              if (x) {
+                return await fetchData();
+              } else {
+                await new Promise((resolve) =>
+                  resolve(setTimeout(ErrorToast("Session expired.")), 2500)
+                );
+                navigate("/login");
+              }
+            }
+            throw error;
+          }
+        } else {
+          quizData = state;
+        }
+
+        localStorage.setItem(quizId, quizData || state); // This represents the original quiz from the backend.
 
         // shuffle options
-        const shuffledQuestionOptions = quizData.questions.map(question => {
-            const shuffledOptions = shuffleArray(question.options); // shuffle options
-            return {
-                ...question,
-                options: shuffledOptions
-            }
-        })
+        const shuffledQuestionOptions = quizData.questions.map((question) => {
+          const shuffledOptions = shuffleArray(question.options); // shuffle options
+          return {
+            ...question,
+            options: shuffledOptions,
+          };
+        });
         quizData.questions = shuffledQuestionOptions; // replace non-shuffled with shuffled
 
         // shuffle questions order
         const shuffledQuestions = shuffleArray(quizData.questions);
-        console.log("order shuffled",shuffledQuestions);
-        quizData.questions = shuffledQuestions
+        quizData.questions = shuffledQuestions;
         setQuizData(quizData);
 
-        const userReq = await axios.get("/mock/dashboard.json");
-        // console.log(userReq);
-        if (userReq.status !== 200) return setLoadingError(true);
-        const userData = userReq.data;
+        const getUser = async () => {
+          try {
+            const response = await axios.get(
+              `${apiUrl}/api/users/me`,
+
+              {
+                timeout: 30 * 1000,
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            );
+
+            return response.data;
+          } catch (error) {
+            if (error?.response?.data?.refresh) {
+              const x = await refreshAccess();
+              if (x) {
+                return await getUser();
+              } else {
+                await new Promise((resolve) =>
+                  resolve(setTimeout(ErrorToast("Session expired.")), 2500)
+                );
+                navigate("/login");
+              }
+            }
+            throw error;
+          }
+        };
+
+        const userData = await getUser();
         setDashboardData(userData);
 
         setIsLoading(false);
@@ -431,7 +551,7 @@ const QuizPage = ({ isExam }) => {
         const initialQuizState = Array.from(
           { length: quizData.questions.length },
           (_, index) => ({
-            questionId: quizData.questions[index].questionId, // set id to that from backend(randomid)
+            questionId: quizData.questions[index].questionId, // set question Id. It shall be sent to backend on subsequent requests for answers fetch
             selectedAnswer: null,
             correctAnswer: null,
             checkAnswerDisabled: true,
@@ -443,7 +563,7 @@ const QuizPage = ({ isExam }) => {
         );
         setQuizState(initialQuizState);
         // check how many questions user has answered
-        isExam ? calculateQA(quizData) : undefined
+        isExam ? calculateQA(quizData) : undefined;
       } catch (error) {
         console.error(error);
         setLoadingError(true);
@@ -451,10 +571,8 @@ const QuizPage = ({ isExam }) => {
     };
 
     fetchData();
-
-    
   }, [loadingError]);
-  
+
   return (
     <>
       {loadingError ? (
@@ -485,7 +603,7 @@ const QuizPage = ({ isExam }) => {
                         variant="secondary"
                         className="text-red-500 p-3 cursor-pointer text-sm"
                       >
-                        End {isExam? "Exam" : "Quiz"}
+                        End {isExam ? "Exam" : "Quiz"}
                       </Button>
                       <div className="flex flex-col items-center justify-center">
                         <p className="font-medium text-gray-700">
@@ -516,7 +634,7 @@ const QuizPage = ({ isExam }) => {
                 <>
                   <div className="grid md:grid-cols-[2fr_1fr] gap-3 md:gap-8 mt-5">
                     {/* Quiz answering section (LHS)  */}
-                    <section ref={quizCard}>
+                    <section ref={quizCard} className="">
                       <div className="mb-6">
                         <h1 className="text-2xl font-medium text-gray-900 my-2 md:mt-0">
                           {quizData.title || "Untitled Quiz"}
@@ -575,45 +693,47 @@ const QuizPage = ({ isExam }) => {
                       )}
 
                       {/* Switch Section for Ask AI */}
-                      {!isExam &&  <div className="flex items-center my-6 space-x-2">
-                        <Switch
-                          id="ask-ai"
-                          size={16}
-                          //  only when correct answer has been fetched, enable ability to ask ai
-                          disabled={
-                            quizState[currentQuestion - 1].correctAnswer
-                              ? false
-                              : true
-                          }
-                          checked={
-                            !quizState[currentQuestion - 1].showAskAI
-                              ? false
-                              : true
-                          } // uncheck when we move to next question and its showAskAI is false
-                          className="data-[state=checked]:bg-blue-600"
-                          onCheckedChange={() => {
-                            setQuizState((prevQuizState) => {
-                              return prevQuizState.map(
-                                (questionState, index) => {
-                                  if (index === currentQuestion - 1) {
-                                    return {
-                                      ...questionState,
-                                      showAskAI: !questionState.showAskAI,
-                                    };
-                                  } else return questionState;
-                                }
-                              );
-                            });
-                          }}
-                        />
-                        <Label
-                          htmlFor="ask-ai"
-                          className="text-sm font-normal text-gray-700"
-                        >
-                          Ask AI Follow-up
-                        </Label>
-                      </div>}
-                     
+                      {!isExam && (
+                        <div className="flex items-center my-6 space-x-2">
+                          <Switch
+                            id="ask-ai"
+                            size={16}
+                            //  only when correct answer has been fetched, enable ability to ask ai
+                            disabled={
+                              quizState[currentQuestion - 1].correctAnswer
+                                ? false
+                                : true
+                            }
+                            checked={
+                              !quizState[currentQuestion - 1].showAskAI
+                                ? false
+                                : true
+                            } // uncheck when we move to next question and its showAskAI is false
+                            className="data-[state=checked]:bg-blue-600"
+                            onCheckedChange={() => {
+                              setQuizState((prevQuizState) => {
+                                return prevQuizState.map(
+                                  (questionState, index) => {
+                                    if (index === currentQuestion - 1) {
+                                      return {
+                                        ...questionState,
+                                        showAskAI: !questionState.showAskAI,
+                                      };
+                                    } else return questionState;
+                                  }
+                                );
+                              });
+                            }}
+                          />
+                          <Label
+                            htmlFor="ask-ai"
+                            className="text-sm font-normal text-gray-700"
+                          >
+                            Ask AI Follow-up
+                          </Label>
+                        </div>
+                      )}
+
                       {/* The Input for asking AI */}
                       {/* <motion.div
                               initial={{ opacity: 0, height: 0 }}
@@ -630,14 +750,13 @@ const QuizPage = ({ isExam }) => {
                             transition={{ duration: 0.2 }}
                           >
                             <Card className="my-5 p-4">
-                              {console.log("me")}
                               <CardAction className="flex gap-3 w-full">
                                 <Input
                                   placeholder="Ask AI anything about this question..."
                                   className="text-sm"
-                                  onChange={(e) =>
-                                    {updateAskAiField(e.target.value)}
-                                  }
+                                  onChange={(e) => {
+                                    updateAskAiField(e.target.value);
+                                  }}
                                   value={
                                     quizState[currentQuestion - 1].askAiField
                                   }
@@ -658,15 +777,14 @@ const QuizPage = ({ isExam }) => {
                         )}
 
                       {!isExam && <Separator className="hidden sm:block" />}
-                      
 
                       {/* Mobile Switch for Questions */}
-                      <div className="flex justify-between bg-white fixed bottom-0 left-0 w-full px-3 py-3 shadow-2xl md:bg-transparent md:relative md:shadow-none z-50">
+                      <div className="flex justify-between bg-white fixed bottom-0 left-0 w-full px-3 py-3 shadow-2xl md:bg-transparent md:relative md:shadow-none z-50 ">
                         {/* Prev Button */}
                         <Button
                           variant="outline"
                           size="icon"
-                          className="md:py-2 md:px-12 not-disabled:cursor-pointer"
+                          className="md:py-2 md:px-12 not-disabled:cursor-pointer hover:bg-gray-50 transition-all duration-500"
                           disabled={
                             (currentQuestion === 1 && true) ||
                             (isRequesting && disableButtons)
@@ -685,9 +803,10 @@ const QuizPage = ({ isExam }) => {
                         </Button>
 
                         {/* Check Answer */}
-                        {!quizState[currentQuestion - 1].correctAnswer && !isExam ? (
+                        {!quizState[currentQuestion - 1].correctAnswer &&
+                        !isExam ? (
                           <Button
-                            className="bg-blue-600 not-disabled:cursor-pointer"
+                            className="bg-blue-600 not-disabled:cursor-pointer hover:bg-blue-600/90 transition-all duration-500 hover:text-white"
                             disabled={
                               quizState[currentQuestion - 1].correctAnswer
                                 ? true
@@ -696,36 +815,42 @@ const QuizPage = ({ isExam }) => {
                             }
                             onClick={checkAnswer}
                           >
-                            {isRequesting ? <LoadingDots /> : "Check Answer"}
+                            {isRequesting ? (
+                              <LoadingDots className="px-4" />
+                            ) : (
+                              "Check Answer"
+                            )}
                           </Button>
                         ) : (
-                            <>
+                          <>
                             {/* Only show this if correctAnswer becomes available. It is necessary to do it this way because of the exam mode displaying correct answers in the end */}
-                            {quizState[currentQuestion - 1].correctAnswer && <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <div
-                              className={`flex items-center space-x-2 ${
-                                quizState[currentQuestion - 1].isCorrect
-                                  ? "text-green-600 bg-green-50 border-green-200"
-                                  : "text-red-600 bg-red-50 border-red-200"
-                              } font-semibold px-3 py-2 text-sm rounded-md  border md:hidden`}
-                            >
-                              {quizState[currentQuestion - 1].isCorrect ? (
-                                <CircleCheck size={18} />
-                              ) : (
-                                <CircleX size={18} />
-                              )}
-                              <span>
-                                {quizState[currentQuestion - 1].isCorrect
-                                  ? "Correct!"
-                                  : "Incorrect."}
-                              </span>
-                            </div>
-                          </motion.div>}
-                         </> 
+                            {quizState[currentQuestion - 1].correctAnswer && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <div
+                                  className={`flex items-center space-x-2 ${
+                                    quizState[currentQuestion - 1].isCorrect
+                                      ? "text-green-600 bg-green-50 border-green-200"
+                                      : "text-red-600 bg-red-50 border-red-200"
+                                  } font-semibold px-3 py-2 text-sm rounded-md  border md:hidden`}
+                                >
+                                  {quizState[currentQuestion - 1].isCorrect ? (
+                                    <CircleCheck size={18} />
+                                  ) : (
+                                    <CircleX size={18} />
+                                  )}
+                                  <span>
+                                    {quizState[currentQuestion - 1].isCorrect
+                                      ? "Correct!"
+                                      : "Incorrect."}
+                                  </span>
+                                </div>
+                              </motion.div>
+                            )}
+                          </>
                         )}
 
                         {/* Next Button */}
@@ -740,7 +865,7 @@ const QuizPage = ({ isExam }) => {
                           <Button
                             variant="outline"
                             size="icon"
-                            className={`not-disabled:bg-blue-600 not-disabled:text-white not-disabled:cursor-pointer md:py-2 md:px-12 `}
+                            className={`not-disabled:bg-blue-600 not-disabled:text-white not-disabled:cursor-pointer md:py-2 md:px-12 hover:bg-blue-600/90 transition-all duration-500 hover:text-white`}
                             disabled={isRequesting && disableButtons}
                             onClick={
                               currentQuestion < quizData.questions.length
@@ -765,13 +890,17 @@ const QuizPage = ({ isExam }) => {
                     <Card className="p-5 md:sticky md:top-0 h-[90vh]">
                       <CardHeader className="flex flex-col justify-center items-center p-4 bg-blue-50 border border-blue-200 rounded-lg text-center gap-1">
                         <CardTitle className="text-3xl font-bold text-blue-700">
-                            {/* This should display the number of questions answered when in exam mode */}
-                            {isExam ? `${questionsAnswered}/${quizState.length}` : calculatePercentCorrect()}
-                          
+                          {/* This should display the number of questions answered when in exam mode */}
+                          {isExam
+                            ? `${questionsAnswered}/${quizState.length}`
+                            : calculatePercentCorrect()}
                         </CardTitle>
                         <CardDescription className="text-sm text-gray-600">
-                            {isExam ? `You are ${completeScoreSentence()}% complete` : `You got ${scoreCount} answer${scoreCount > 1 ? "s" : ""} correct`}
-                          
+                          {isExam
+                            ? `You are ${completeScoreSentence()}% complete`
+                            : `You got ${scoreCount} answer${
+                                scoreCount > 1 ? "s" : ""
+                              } correct`}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="p-0 overflow-y-auto relative">
@@ -783,13 +912,14 @@ const QuizPage = ({ isExam }) => {
                             return (
                               <Button
                                 key={`toQuestion${index + 1}`}
+                                disabled={isRequesting && disableButtons}
                                 onClick={() => {
                                   setCurrentQuestion(index + 1);
                                   scrollIntoView(quizCard);
                                 }}
-                                className={`flex gap-3 !py-5 w-full justify-start items-center bg-white text-gray-700 shadow-none ${
+                                className={`flex gap-3 !py-5 w-full justify-start items-center bg-white text-gray-700 shadow-none hover:bg-gray-50 transition-all duration-500 ${
                                   currentQuestion === index + 1 &&
-                                  "text-blue-700 bg-blue-100 border-1 border-blue-300"
+                                  "text-blue-700 bg-blue-100 border-1 border-blue-300 pointer-events-none"
                                 }`}
                               >
                                 {!questionState.correctAnswer ? (

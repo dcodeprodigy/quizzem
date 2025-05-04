@@ -48,6 +48,7 @@ function displayLoadingToast(msg) {
 }
 
 const SignupPage = () => {
+  const apiUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
   const formRef = useRef();
   const [errors, setErrors] = useState({
@@ -73,7 +74,7 @@ const SignupPage = () => {
       toastId = displayLoadingToast("Hang tight while we sign you up...");
 
       const response = await axios.post(
-        "http://localhost:5000/api/auth/signup",
+        `${apiUrl}/api/auth/signup`,
         {
           fName: formState.fName,
           lName: formState.lName,
@@ -125,58 +126,6 @@ const SignupPage = () => {
   return (
     <>
       <Tags />
-      {pending ? (
-        <div className="bg-white max-w-lg mx-auto p-8 rounded-2xl shadow-xl text-center text-gray-800 relative overflow-hidden">
-        {/* Subtle blur gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-transparent to-transparent backdrop-blur-sm rounded-2xl pointer-events-none z-0"></div>
-      
-        {/* Main content */}
-        <div className="relative z-10">
-          <img
-            src="/images/verify-mail-icon.png"
-            alt="Verify Email"
-            className="mx-auto mb-5 w-36 h-36 object-contain"
-          />
-      
-          <h2 className="text-xl font-semibold text-blue-500 mb-1">
-            Welcome to Quizzem
-          </h2>
-      
-          <h1 className="text-2xl font-bold mb-4 text-gray-900">
-            Just one step left!
-          </h1>
-      
-          <p className="mb-1 text-gray-700">
-            You signed up with{" "}
-            <span className="font-medium text-gray-900">elizabeth@bennetcom</span>.
-          </p>
-      
-          <p className="mb-6 text-gray-700">
-            To activate your account, please verify your email address by clicking the button below.
-          </p>
-      
-          <a
-            href="https://yourdomain.com/verifyemail/token"
-            className="inline-block bg-blue-500 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-600 transition"
-          >
-            Verify your email
-          </a>
-      
-          <p className="mt-6 text-sm text-gray-500">
-            Or copy and paste this link into your browser:
-            <br />
-            <a
-              href="https://yourdomain.com/verifyemail/token"
-              className="text-blue-500 break-all underline underline-offset-2"
-            >
-              https://yourdomain.com/verifyemail/token
-            </a>
-          </p>
-        </div>
-      </div>
-            
-      
-      ) : (
         <>
           <main className="bg-gray-50 flex items-center justify-center max-w-screen text-slate-600 text-[14px]">
             {/* Division for the grid items  */}
@@ -349,9 +298,8 @@ const SignupPage = () => {
               </section>
             </div>
           </main>
-          <ToastContainer className="text-base" />{" "}
+          <ToastContainer className="text-base" />
         </>
-      )}
     </>
   );
 };
