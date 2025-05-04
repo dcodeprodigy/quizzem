@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import axios from "axios";
-import AppLogo from "@/components/AppLogo";
+import AppLogo from "@/components/AppLogo.jsx";
 import { UserProvider } from "../../context/user";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -28,9 +28,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { shuffleArray } from "@/utils/random";
+import { shuffleArray } from "@/utils/random.js";
 import { motion } from "framer-motion";
-import LoadingDots from "@/components/LoadingDots";
+import LoadingDots from "@/components/LoadingDots.jsx";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,17 +42,18 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { CircleCheck } from "lucide-react";
 import { CircleX } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { GripVertical } from "lucide-react";
-import refreshAccess from "@/utils/refreshAccess";
-import { ErrorToast } from "@/utils/toast";
+import refreshAccess from "@/utils/refreshAccess.js";
+import { ErrorToast } from "@/utils/toast.js";
+import LoadingSpinner from "@/components/LoadingSpinner.jsx";
+import { ToastContainer } from "react-toastify";
 
 const QuizPage = ({ isExam }) => {
   const { id: quizId } = useParams();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [loadingError, setLoadingError] = useState(false);
-  const [quizData, setQuizData] = useState({});
+  const [quizData, setQuizData] = useState(null);
   const [dashboardData, setDashboardData] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [quizState, setQuizState] = useState(null);
@@ -64,6 +65,15 @@ const QuizPage = ({ isExam }) => {
   const { state } = useLocation();
   const [timeRemaining, setTimeRemaining] = useState(60 * 20);
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    // Only set when these guys are not null. Prevents setting them with empty values of the state itself which resets every page reload
+    if (quizData && quizState) {
+      localStorage.setItem(`${quizId}-data-shuffled`, JSON.stringify(quizData));
+      localStorage.setItem(`${quizId}-state`, JSON.stringify(quizState));
+      localStorage.setItem("scoreCount", scoreCount);
+    }
+  }, [quizData, quizState]);
 
   const scrollIntoView = (Elem) => {
     // Scroll an element into view
@@ -97,10 +107,9 @@ const QuizPage = ({ isExam }) => {
       <>
         <AlertDialog>
           <AlertDialogTrigger
-            className={`md:!py-2 md:!px-8 !px-2.5 not-disabled:cursor-pointer rounded-md text-sm font-medium text-center shadow-xs ${
-              currentQuestion === quizData.questions.length &&
+            className={`md:!py-2 md:!px-8 !px-2.5 not-disabled:cursor-pointer rounded-md text-sm font-medium text-center shadow-xs ${currentQuestion === quizData.questions.length &&
               "!bg-red-600 disabled:!bg-red-200 !text-white"
-            }`}
+              }`}
           >
             <span className="hidden md:inline-block ">Submit</span>
             <ChevronRight className="md:hidden" size={16} />
@@ -114,7 +123,13 @@ const QuizPage = ({ isExam }) => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => {endQuiz()}}>End</AlertDialogAction>
+              <AlertDialogAction
+                onClick={async () => {
+                  await endQuiz();
+                }}
+              >
+                End
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -146,6 +161,9 @@ const QuizPage = ({ isExam }) => {
           prevState = response.data;
         });
       } else {
+        localStorage.removeItem(`${quizId}-state`);
+        localStorage.removeItem(`${quizId}-data-shuffled`);
+        localStorage.removeItem("scoreCount");
         navigate("/dashboard");
       }
     } catch (error) {
@@ -160,6 +178,8 @@ const QuizPage = ({ isExam }) => {
           navigate("/login");
         }
       }
+    } finally {
+      setIsLoading(false);
     }
 
     // navigate to dashboard page, with newly fetched dashboard data loaded
@@ -178,6 +198,7 @@ const QuizPage = ({ isExam }) => {
     if (!isExam) {
       setDisableButtons(true);
       setIsRequesting(true);
+
       // Disable check answer button
       const mutateQuestionState = (disable) => {
         setQuizState((prevQuizState) => {
@@ -231,7 +252,7 @@ const QuizPage = ({ isExam }) => {
                 correctAnswer: correctAnswer,
                 isCorrect:
                   correctAnswer ===
-                  quizState[currentQuestion - 1].selectedAnswer
+                    quizState[currentQuestion - 1].selectedAnswer
                     ? true
                     : false,
               };
@@ -242,6 +263,8 @@ const QuizPage = ({ isExam }) => {
         response.data.correctAnswer ===
           quizState[currentQuestion - 1].selectedAnswer &&
           setScoreCount((prevScore) => prevScore + 1);
+
+        // Save current state to localStorage
       } catch (error) {
         const responseObject = error.response;
 
@@ -253,7 +276,7 @@ const QuizPage = ({ isExam }) => {
             return await checkAnswer();
           } else {
             // if refresh failed, clear local storage and redirect to login
-            localStorage.clear("token");
+            localStorage.clear();
             return navigate("/login");
           }
         }
@@ -261,8 +284,8 @@ const QuizPage = ({ isExam }) => {
 
         ErrorToast(
           error?.response?.data?.msg ||
-            error?.response?.data ||
-            "Client Side Error"
+          error?.response?.data ||
+          "Client Side Error"
         );
         // re-enable check answer button if there is an error
         mutateQuestionState(false);
@@ -270,6 +293,7 @@ const QuizPage = ({ isExam }) => {
       } finally {
         setDisableButtons(false);
         setIsRequesting(false);
+        setIsLoading(false);
       }
     }
   };
@@ -305,59 +329,53 @@ const QuizPage = ({ isExam }) => {
         <Button
           key={optionLetter}
           variant="outline"
-          className={`py-8 flex justify-between items-center w-full font-normal hover:bg-gray-50 border-gray-300 shadow-none rounded-lg not-disabled:cursor-pointer transition-all duration-500 disabled:cursor-not-allowed ${
-            quizState[currentQuestion - 1].correctAnswer &&
+          className={`py-4 !max-h-none h-auto flex justify-between items-center w-full font-normal hover:bg-gray-50 border-gray-300 shadow-none rounded-lg not-disabled:cursor-pointer transition-all duration-500 disabled:cursor-not-allowed ${quizState[currentQuestion - 1].correctAnswer &&
             "pointer-events-none"
-          }  
+            }  
           ${isRequesting && "pointer-events-none"}
-          ${
-            quizState[currentQuestion - 1]?.selectedAnswer === option &&
+          ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
             "border-blue-400  bg-blue-50 ring-2 ring-blue-500 ring-offset-1 pointer-events-none"
-          }
-          ${
-            quizState[currentQuestion - 1]?.selectedAnswer === option &&
+            }
+          ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
             quizState[currentQuestion - 1]?.isCorrect &&
             "border-green-400 bg-blue-green ring-2 ring-green-500 ring-offset-0"
-          }
-          ${
-            quizState[currentQuestion - 1]?.correctAnswer === option &&
+            }
+          ${quizState[currentQuestion - 1]?.correctAnswer === option &&
             "border-green-400 bg-green-50 ring-2 ring-green-500 ring-offset-0"
-          }
-          ${
-            quizState[currentQuestion - 1]?.selectedAnswer === option &&
+            }
+          ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
             quizState[currentQuestion - 1].isCorrect === false &&
             "border-red-400  bg-red-50 ring-2 ring-red-500 ring-offset-1"
-          }
-          ${
-            quizState[currentQuestion - 1]?.selectedAnswer === option &&
+            }
+          ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
             quizState[currentQuestion - 1].correctAnswer !== null &&
             quizState[currentQuestion - 1].correctAnswer !== option &&
             "border-red-400  bg-red-50 ring-2 ring-red-500 ring-offset-0"
-          }`}
+            }`}
           onClick={
             !quizState[currentQuestion - 1].correctAnswer &&
-            isRequesting === false
+              isRequesting === false
               ? () => {
-                  // This means only run this onClick function when we are not requesting and there is no correctAnswer in state
+                // This means only run this onClick function when we are not requesting and there is no correctAnswer in state
 
-                  // Update questions answered state before updating selectedAnswer
-                  !quizState[currentQuestion - 1].selectedAnswer &&
-                    setQuestionsAnswered(questionsAnswered + 1);
+                // Update questions answered state before updating selectedAnswer
+                !quizState[currentQuestion - 1].selectedAnswer &&
+                  setQuestionsAnswered(questionsAnswered + 1);
 
-                  // Set as selected answer in state
-                  setQuizState((prevQuizState) => {
-                    return prevQuizState.map((questionState, index) => {
-                      if (index === currentQuestion - 1) {
-                        return {
-                          ...questionState,
-                          selectedAnswer: option, // use  the actual option instead. helps to easily shuffle options on initial render without issues of indexing when accessing correct answer
-                          checkAnswerDisabled: false,
-                        };
-                      } else return questionState;
-                    });
+                // Set as selected answer in state
+                setQuizState((prevQuizState) => {
+                  return prevQuizState.map((questionState, index) => {
+                    if (index === currentQuestion - 1) {
+                      return {
+                        ...questionState,
+                        selectedAnswer: option, // use  the actual option instead. helps to easily shuffle options on initial render without issues of indexing when accessing correct answer
+                        checkAnswerDisabled: false,
+                      };
+                    } else return questionState;
                   });
-                  setDisableButtons(false);
-                }
+                });
+                setDisableButtons(false);
+              }
               : undefined
           }
         >
@@ -365,66 +383,56 @@ const QuizPage = ({ isExam }) => {
           <div className="flex gap-3 items-center ">
             <span
               // In this classnames we used isCorrect === false and not !isCorrect because a var may be falsy but not false
-              className={`w-7 h-7 p-3 flex items-center justify-center text-sm rounded-full border-2 border-gray-400 font-medium ${
-                quizState[currentQuestion - 1]?.selectedAnswer === option &&
+              className={`w-7 h-7 p-3 flex items-center justify-center text-sm rounded-full border-2 border-gray-400 font-medium ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
                 "bg-blue-500 !border-blue-500 text-white"
-              }
-            ${
-              quizState[currentQuestion - 1]?.selectedAnswer === option &&
-              quizState[currentQuestion - 1]?.isCorrect &&
-              "bg-green-500 !border-green-500 text-white"
-            }
-            ${
-              quizState[currentQuestion - 1]?.correctAnswer === option &&
-              "bg-green-500 !border-green-500 text-white"
-            }
-          ${
-            quizState[currentQuestion - 1]?.selectedAnswer === option &&
-            quizState[currentQuestion - 1].isCorrect === false &&
-            "bg-red-500 !border-red-500 text-white"
-          } `}
+                }
+            ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
+                quizState[currentQuestion - 1]?.isCorrect &&
+                "bg-green-500 !border-green-500 text-white"
+                }
+            ${quizState[currentQuestion - 1]?.correctAnswer === option &&
+                "bg-green-500 !border-green-500 text-white"
+                }
+          ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
+                quizState[currentQuestion - 1].isCorrect === false &&
+                "bg-red-500 !border-red-500 text-white"
+                } `}
             >
               {optionLetter}
             </span>
             <span
-              className={`whitespace-normal break-words sm:text-base text-left ${
-                quizState[currentQuestion - 1]?.selectedAnswer === option &&
+              className={`whitespace-normal break-words sm:text-base text-left ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
                 "font-medium"
-              }
-            ${
-              quizState[currentQuestion - 1]?.selectedAnswer === option &&
-              quizState[currentQuestion - 1]?.isCorrect &&
-              "font-medium text-green-800"
-            }
-            ${
-              quizState[currentQuestion - 1]?.correctAnswer === option &&
-              "font-medium text-green-800"
-            }
-          ${
-            quizState[currentQuestion - 1]?.selectedAnswer === option &&
-            quizState[currentQuestion - 1].isCorrect === false &&
-            "font-medium text-red-800"
-          }`}
+                }
+            ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
+                quizState[currentQuestion - 1]?.isCorrect &&
+                "font-medium text-green-800"
+                }
+            ${quizState[currentQuestion - 1]?.correctAnswer === option &&
+                "font-medium text-green-800"
+                }
+          ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
+                quizState[currentQuestion - 1].isCorrect === false &&
+                "font-medium text-red-800"
+                }`}
             >
               {option}
             </span>
           </div>
           <CircleCheck
             className={`hidden text-green-500
-            ${
-              quizState[currentQuestion - 1]?.correctAnswer === option &&
+            ${quizState[currentQuestion - 1]?.correctAnswer === option &&
               "inline-block"
-            }
+              }
             `}
           />
           <CircleX
             className={`hidden text-red-500 
-            ${
-              quizState[currentQuestion - 1]?.selectedAnswer === option &&
+            ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
               quizState[currentQuestion - 1].correctAnswer !== null &&
               quizState[currentQuestion - 1].correctAnswer !== option &&
               "inline-block"
-            }
+              }
             `}
           />
         </Button>
@@ -461,11 +469,60 @@ const QuizPage = ({ isExam }) => {
     );
   };
 
+
+  const getUser = async () => {
+    try {
+      const response = await axios.get(
+        `${apiUrl}/api/users/me`,
+
+        {
+          timeout: 30 * 1000,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      if (error?.response?.data?.refresh) {
+        const x = await refreshAccess();
+        if (x) {
+          return await getUser();
+        } else {
+          await new Promise((resolve) =>
+            resolve(setTimeout(ErrorToast("Session expired.")), 2500)
+          );
+          navigate("/login");
+        }
+      }
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         let quizData;
-        if (!state) {
+
+        // Set QuizState to Local storage data if available
+        const localQuizState = JSON.parse(
+          localStorage.getItem(`${quizId}-state`)
+        );
+        const localQuizData = JSON.parse(
+          localStorage.getItem(`${quizId}-data-shuffled`)
+        );
+        const score = Number(localStorage.getItem("scoreCount"))
+        if (localQuizState && localQuizData) {
+          /**
+           * @todo Prompt user that previous state was found. Do you want to restore it?
+           */
+          setQuizState(localQuizState);
+          setQuizData(localQuizData);
+          setScoreCount(score);
+        }
+
+        if (!state && !localQuizData && !localQuizState) {
           try {
             const quizReq = await axios.get(
               `${apiUrl}/api/me/quizzes/${quizId}`,
@@ -492,76 +549,58 @@ const QuizPage = ({ isExam }) => {
             throw error;
           }
         } else {
-          quizData = state;
+          quizData = localQuizData ? localQuizData : state;
         }
 
-        localStorage.setItem(quizId, quizData || state); // This represents the original quiz from the backend.
+        if (!localQuizData && !localQuizState) {
+          // shuffle options
+          const shuffledQuestionOptions = quizData.questions.map((question) => {
+            const shuffledOptions = shuffleArray(question.options); // shuffle options
+            return {
+              ...question,
+              options: shuffledOptions,
+            };
+          });
+          quizData.questions = shuffledQuestionOptions; // replace non-shuffled with shuffled
 
-        // shuffle options
-        const shuffledQuestionOptions = quizData.questions.map((question) => {
-          const shuffledOptions = shuffleArray(question.options); // shuffle options
-          return {
-            ...question,
-            options: shuffledOptions,
-          };
-        });
-        quizData.questions = shuffledQuestionOptions; // replace non-shuffled with shuffled
+          // shuffle questions order
+          const shuffledQuestions = shuffleArray(quizData.questions);
+          quizData.questions = shuffledQuestions;
+        }
 
-        // shuffle questions order
-        const shuffledQuestions = shuffleArray(quizData.questions);
-        quizData.questions = shuffledQuestions;
         setQuizData(quizData);
 
-        const getUser = async () => {
-          try {
-            const response = await axios.get(
-              `${apiUrl}/api/users/me`,
-
-              {
-                timeout: 30 * 1000,
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              }
-            );
-
-            return response.data;
-          } catch (error) {
-            if (error?.response?.data?.refresh) {
-              const x = await refreshAccess();
-              if (x) {
-                return await getUser();
-              } else {
-                await new Promise((resolve) =>
-                  resolve(setTimeout(ErrorToast("Session expired.")), 2500)
-                );
-                navigate("/login");
-              }
-            }
-            throw error;
-          }
-        };
+        localStorage.setItem(
+          `${quizId}-data-shuffled`,
+          JSON.stringify(quizData)
+        );
 
         const userData = await getUser();
         setDashboardData(userData);
 
         setIsLoading(false);
 
-        // Update Questions State
-        const initialQuizState = Array.from(
-          { length: quizData.questions.length },
-          (_, index) => ({
-            questionId: quizData.questions[index].questionId, // set question Id. It shall be sent to backend on subsequent requests for answers fetch
-            selectedAnswer: null,
-            correctAnswer: null,
-            checkAnswerDisabled: true,
-            explanation: null,
-            aiConvo: null,
-            disableAskAi: true,
-            askAiField: "",
-          })
-        );
-        setQuizState(initialQuizState);
+        if (!localQuizState) {
+          // Update Questions State
+          const initialQuizState = Array.from(
+            { length: quizData.questions.length },
+            (_, index) => ({
+              questionId: quizData.questions[index].questionId, // set question Id. It shall be sent to backend on subsequent requests for answers fetch
+              selectedAnswer: null,
+              correctAnswer: null,
+              checkAnswerDisabled: true,
+              explanation: null,
+              aiConvo: null,
+              disableAskAi: true,
+              askAiField: "",
+            })
+          );
+          setQuizState(initialQuizState);
+        }
+
+        if (!localQuizState) {
+          localStorage.setItem(`${quizId}-state`, JSON.stringify(quizState));
+        }
         // check how many questions user has answered
         isExam ? calculateQA(quizData) : undefined;
       } catch (error) {
@@ -580,42 +619,58 @@ const QuizPage = ({ isExam }) => {
       ) : (
         <>
           <div className="min-h-screen pb-24 bg-gray-50">
-            <div className="w-full shadow-sm py-4 px-8 bg-white">
+            <div className="w-full shadow-sm py-4 px-4 sm:px-8 bg-white">
               <header className="container m-auto grid grid-cols-2 items-center text-slate-500">
                 {isLoading ? (
-                  <Skeleton className="w-[200px] h-[32px]" />
+                  <Skeleton className="w-[150px] sm:w-[200px] h-[32px]" />
                 ) : (
                   <AppLogo />
                 )}
-                <div className="flex justify-end items-center flex-end gap-3">
+                <div className="flex justify-end items-center gap-2 sm:gap-3">
                   {isLoading ? (
-                    <div className="flex gap-3 items-center justify-center">
-                      <Skeleton className="w-[80px] h-[30px]" />
-                      <div className="flex flex-col gap-1">
+                    <div className="flex gap-2 sm:gap-3 items-center justify-end">
+                      <Skeleton className="w-[60px] sm:w-[80px] h-[30px]" />
+                      {/* Optionally hide text skeleton on mobile */}
+                      <div className="hidden sm:flex flex-col gap-1">
                         <Skeleton className="w-[50px] h-[18px]" />
                         <Skeleton className="w-[50px] h-[18px]" />
                       </div>
-                      <Skeleton className="w-[40px] h-[40px] rounded-full" />
+                      <Skeleton className="w-[32px] h-[32px] sm:w-[40px] sm:h-[40px] rounded-full" />
                     </div>
                   ) : (
-                    <nav className="flex gap-4 items-center justify-center">
+                    <nav className="flex gap-2 sm:gap-4 items-center justify-end">
                       <Button
                         variant="secondary"
-                        className="text-red-500 p-3 cursor-pointer text-sm"
+                        className="text-red-500 px-2 py-1 sm:px-3 sm:py-2 cursor-pointer text-xs sm:text-sm"
+                        disabled={isLoading || isRequesting}
+                        onClick={async () => {
+                          setIsRequesting(true);
+                          await endQuiz();
+                          setIsRequesting(false);
+                        }}
                       >
-                        End {isExam ? "Exam" : "Quiz"}
+                        {isRequesting ? (
+                          <LoadingSpinner size={16} />
+                        ) : (
+                          <>End {isExam ? "Exam" : "Quiz"}</>
+                        )}
                       </Button>
-                      <div className="flex flex-col items-center justify-center">
-                        <p className="font-medium text-gray-700">
+                      {/* Optionally hide email on mobile */}
+                      <div className="hidden sm:flex flex-col items-end justify-center">
+                        <p className="font-medium text-gray-700 text-sm">
                           {dashboardData?.user.fName}
                         </p>
                         <p className="text-[12px]">
                           {dashboardData?.user.email}
                         </p>
                       </div>
-                      <Avatar className="border-2 border-blue-100 grow-0 size-10">
+                      <Avatar className="border-2 border-blue-100 grow-0 size-10 sm:size-12">
+                        {" "}
+                        {/* Adjusted size */}
                         <AvatarImage src="https://github.com/shadcn.png" />
-                        <AvatarFallback className="bg-blue-500 text-white">
+                        <AvatarFallback className="bg-blue-500 text-white text-xs sm:text-sm">
+                          {" "}
+                          {/* Adjusted text size */}
                           {dashboardData?.user.fName
                             ? `${dashboardData?.user.fName.slice(0, 1)}`
                             : "CN"}
@@ -627,7 +682,7 @@ const QuizPage = ({ isExam }) => {
               </header>
             </div>
 
-            <main className="container m-auto px-8">
+            <main className="container m-auto px-3 md:px-4">
               {isLoading ? (
                 "Loading Skeleton"
               ) : (
@@ -647,13 +702,13 @@ const QuizPage = ({ isExam }) => {
                       <Card className="rounded-2xl py-8">
                         <CardHeader>
                           <CardTitle className="flex flex-col gap-1 text-base sm:text-lg ">
-                            <p className="text-gray-800">
+                            <p className="text-gray-900">
                               Question {currentQuestion}
                             </p>
-                            <p className="text-gray-700">
+                            <p className="text-gray-700 font-medium">
                               {
                                 quizData["questions"][currentQuestion - 1][
-                                  "question"
+                                "question"
                                 ]
                               }
                             </p>
@@ -671,11 +726,10 @@ const QuizPage = ({ isExam }) => {
                           transition={{ duration: 0.3 }}
                         >
                           <Card
-                            className={`mt-5 flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-l-4 text-sm ${
-                              quizState[currentQuestion - 1].isCorrect
-                                ? "bg-green-50 border-green-500"
-                                : "bg-red-50 border-red-500 "
-                            }`}
+                            className={`mt-5 flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-l-4 text-sm ${quizState[currentQuestion - 1].isCorrect
+                              ? "bg-green-50 border-green-500"
+                              : "bg-red-50 border-red-500 "
+                              }`}
                           >
                             <CardContent className="p-4 md:p-5 space-y-2">
                               <CardTitle className="font-semibold text-sm md:text-base text-gray-900">
@@ -792,9 +846,9 @@ const QuizPage = ({ isExam }) => {
                           onClick={
                             currentQuestion > 1
                               ? () => {
-                                  nextQuestion(false);
-                                  scrollIntoView(quizCard);
-                                }
+                                nextQuestion(false);
+                                scrollIntoView(quizCard);
+                              }
                               : undefined
                           }
                         >
@@ -804,14 +858,14 @@ const QuizPage = ({ isExam }) => {
 
                         {/* Check Answer */}
                         {!quizState[currentQuestion - 1].correctAnswer &&
-                        !isExam ? (
+                          !isExam ? (
                           <Button
                             className="bg-blue-600 not-disabled:cursor-pointer hover:bg-blue-600/90 transition-all duration-500 hover:text-white"
                             disabled={
                               quizState[currentQuestion - 1].correctAnswer
                                 ? true
                                 : quizState[currentQuestion - 1]
-                                    .checkAnswerDisabled // If current correct answer exists, then leave the button disabled even after successful request to backend for answer
+                                  .checkAnswerDisabled // If current correct answer exists, then leave the button disabled even after successful request to backend for answer
                             }
                             onClick={checkAnswer}
                           >
@@ -831,11 +885,10 @@ const QuizPage = ({ isExam }) => {
                                 transition={{ duration: 0.3 }}
                               >
                                 <div
-                                  className={`flex items-center space-x-2 ${
-                                    quizState[currentQuestion - 1].isCorrect
-                                      ? "text-green-600 bg-green-50 border-green-200"
-                                      : "text-red-600 bg-red-50 border-red-200"
-                                  } font-semibold px-3 py-2 text-sm rounded-md  border md:hidden`}
+                                  className={`flex items-center space-x-2 ${quizState[currentQuestion - 1].isCorrect
+                                    ? "text-green-600 bg-green-50 border-green-200"
+                                    : "text-red-600 bg-red-50 border-red-200"
+                                    } font-semibold px-3 py-2 text-sm rounded-md  border md:hidden`}
                                 >
                                   {quizState[currentQuestion - 1].isCorrect ? (
                                     <CircleCheck size={18} />
@@ -856,10 +909,9 @@ const QuizPage = ({ isExam }) => {
                         {/* Next Button */}
                         {currentQuestion === quizData.questions.length ? (
                           <SubmitConfirmation
-                            className={`${
-                              currentQuestion === quizData.questions.length &&
+                            className={`${currentQuestion === quizData.questions.length &&
                               "!bg-red-600 disabled:!bg-red-200 !text-white"
-                            }`}
+                              }`}
                           />
                         ) : (
                           <Button
@@ -870,9 +922,9 @@ const QuizPage = ({ isExam }) => {
                             onClick={
                               currentQuestion < quizData.questions.length
                                 ? () => {
-                                    nextQuestion(true);
-                                    scrollIntoView(quizCard);
-                                  }
+                                  nextQuestion(true);
+                                  scrollIntoView(quizCard);
+                                }
                                 : undefined
                             }
                           >
@@ -898,9 +950,8 @@ const QuizPage = ({ isExam }) => {
                         <CardDescription className="text-sm text-gray-600">
                           {isExam
                             ? `You are ${completeScoreSentence()}% complete`
-                            : `You got ${scoreCount} answer${
-                                scoreCount > 1 ? "s" : ""
-                              } correct`}
+                            : `You got ${scoreCount} answer${scoreCount > 1 ? "s" : ""
+                            } correct`}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="p-0 overflow-y-auto relative">
@@ -917,10 +968,9 @@ const QuizPage = ({ isExam }) => {
                                   setCurrentQuestion(index + 1);
                                   scrollIntoView(quizCard);
                                 }}
-                                className={`flex gap-3 !py-5 w-full justify-start items-center bg-white text-gray-700 shadow-none hover:bg-gray-50 transition-all duration-500 ${
-                                  currentQuestion === index + 1 &&
+                                className={`flex gap-3 !py-5 w-full justify-start items-center bg-white text-gray-700 shadow-none hover:bg-gray-50 transition-all duration-500 ${currentQuestion === index + 1 &&
                                   "text-blue-700 bg-blue-100 border-1 border-blue-300 pointer-events-none"
-                                }`}
+                                  }`}
                               >
                                 {!questionState.correctAnswer ? (
                                   <GripVertical className="text-gray-500" />
@@ -944,6 +994,7 @@ const QuizPage = ({ isExam }) => {
                   </div>
                 </>
               )}
+              <ToastContainer />
             </main>
           </div>
         </>

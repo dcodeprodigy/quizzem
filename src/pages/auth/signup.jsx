@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Slider from "../../components/Slider";
+import Slider from "../../components/Slider.jsx";
 import axios from "axios";
 import { Label } from "@/components/ui/label";
 import { ToastContainer, toast, Flip } from "react-toastify";
@@ -297,8 +297,8 @@ const SignupPage = () => {
                 </form>
               </section>
             </div>
-          </main>
           <ToastContainer className="text-base" />
+          </main>
         </>
     </>
   );

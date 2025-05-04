@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import Slider from "../../components/Slider";
 import { ToastContainer, toast, Flip } from "react-toastify";
 import axios from "axios"
-import LoadingDots from "@/components/LoadingDots";
-import { LoadingToast } from "@/utils/toast";
+import LoadingDots from "@/components/LoadingDots.js";
+import { LoadingToast } from "@/utils/toast.js";
 
 const Tags = () => {
   return (
@@ -49,30 +49,30 @@ const LoginPage = () => {
   const triggerLogin = async (e) => {
     e.preventDefault();
     let toastId;
-  
+
     try {
       setIsLoading(true);
       toastId = LoadingToast("Logging you in...");
-  
+
       const response = await axios.post(`${apiUrl}/api/auth/login`, {
         email: formState.email,
         password: formState.password,
       });
 
       toastId = LoadingToast("Login Success! Redirecting...", toastId, "success");
-  
+
       localStorage.setItem("token", response.data?.token);
-      await new Promise (resolve => setTimeout(resolve, 2500));
+      await new Promise(resolve => setTimeout(resolve, 2500));
       navigate("/dashboard");
     } catch (error) {
       setIsLoading(false);
       console.log(error);
-      
+
       // append errors to state
       if (error?.response?.msgs) {
         const response = error.response.data;
         toastId = LoadingToast("Input validation failed.", toastId, "error");
-  
+
         response.msgs.map((msg) => {
           return setErrors((prevErrors) => ({
             ...prevErrors,
@@ -146,9 +146,8 @@ const LoginPage = () => {
                 />
 
                 <Label
-                  className={`text-red-500 text-xs mt-2 ${
-                    errors.email ? "block" : "hidden"
-                  }`}
+                  className={`text-red-500 text-xs mt-2 ${errors.email ? "block" : "hidden"
+                    }`}
                 >
                   {errors?.email}
                 </Label>
@@ -176,9 +175,8 @@ const LoginPage = () => {
                 />
 
                 <Label
-                  className={`text-red-500 text-xs mt-2 ${
-                    errors.password ? "block" : "hidden"
-                  }`}
+                  className={`text-red-500 text-xs mt-2 ${errors.password ? "block" : "hidden"
+                    }`}
                 >
                   {errors?.password}
                 </Label>
@@ -190,13 +188,13 @@ const LoginPage = () => {
                 className="bg-blue-600 hover:bg-blue-700 text-white hover:text-white w-full mt-2 h-11 cursor-pointer"
                 disabled={isLoading}
               >
-                {isLoading ? <LoadingDots/> : "Login"}
+                {isLoading ? <LoadingDots /> : "Login"}
               </Button>
             </form>
           </section>
         </div>
+        <ToastContainer />
       </main>
-      <ToastContainer/>
     </>
   );
 };

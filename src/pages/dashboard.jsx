@@ -3,16 +3,15 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { io } from "socket.io-client";
-import AppLogo from "@/components/AppLogo";
-import NoSavedQuiz from "@/components/nosavedquiz";
-import NoQuizHistory from "@/components/noquizhistory";
-import MapSavedQuizzes from "@/components/SavedQuizz";
-import MapQuizHistory from "@/components/QuizzHistory";
-import Description from "@/components/AddedInfo";
+import AppLogo from "@/components/AppLogo.jsx";
+import NoSavedQuiz from "@/components/NoSavedQuiz.jsx";
+import NoQuizHistory from "@/components/NoQuizHistory.jsx";
+import MapSavedQuizzes from "@/components/SavedQuizz.jsx";
+import MapQuizHistory from "@/components/QuizzHistory.jsx";
+import Description from "@/components/AddedInfo.jsx";
 import { Helmet } from "react-helmet-async";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  CircleCheck,
+import {CircleCheck,
   ClipboardList,
   Delete,
   FileStack,
@@ -60,7 +59,12 @@ import formatBytes from "@/utils/formatBytes";
 import { X } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { ToastContainer } from "react-toastify";
-import { ErrorToast, InfoToast, LoadingToast, SuccessToast } from "@/utils/toast";
+import {
+  ErrorToast,
+  InfoToast,
+  LoadingToast,
+  SuccessToast,
+} from "@/utils/toast";
 import OverlayAnimation from "@/components/OverlayAnimation";
 
 const WelcomeMsg = ({ dashboardData }) => {
@@ -68,7 +72,7 @@ const WelcomeMsg = ({ dashboardData }) => {
     <>
       <div>
         <h1 className="font-bold text-3xl text-gray-800 max-[930px]:text-[clamp(1.5rem,_1rem_+_2.2vw,_2.2rem)] mt-6">
-          Hello, {" "}
+          Hello,{" "}
           <span className="text-blue-600">{dashboardData?.user.fName}</span>!
         </h1>
         <p className="sm:text-base">Let's get quizzing.</p>
@@ -89,12 +93,12 @@ const PreviouslyUploaded = ({ ...props }) => {
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.3 }}
-          className="border rounded-md bg-gray-50 overflow-y-auto max-h-40 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 transition-all relative"
+          className="border rounded-md bg-gray-50 overflow-y-auto max-h-40 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 transition-all relative max-w-full"
         >
-          <Label className="text-xs font-normal text-gray-500 sticky top-0 bg-gray-50 py-2 px-3 z-50">
+          <Label className="text-xs font-normal text-gray-500 sticky top-0 bg-gray-50 py-2 px-3 z-50 break-words">
             Select a file uploaded in the last 3 months:
           </Label>
-          <div className="px-3 pb-3 mb-4">
+          <div className="px-3 pb-3 mb-4 w-full">
             {console.log("The prevUploads before error: ", props.prevUploads)}
             {console.log(
               "The uploadedFile object before error: ",
@@ -103,8 +107,9 @@ const PreviouslyUploaded = ({ ...props }) => {
             {props.prevUploads.map((upload) => {
               return (
                 <Button
-                  className="bg-transparent w-full hover:bg-gray-100 hover:scale-[1.01]"
+                  className="bg-transparent w-full hover:bg-gray-100 hover:scale-[1.01] max-w-full flex justify-between items-center px-1"
                   key={upload.fileId}
+                  title={upload.fileName}
                   onClick={(e) => {
                     // set as selected
                     e.preventDefault();
@@ -136,14 +141,20 @@ const PreviouslyUploaded = ({ ...props }) => {
                     props.setUserEndPage(upload.range.end);
                   }}
                 >
-                  <FileText
-                    className={`${props.getfileIconColor(upload.fileName)} w-6`}
-                    size={20}
-                  />
-                  <Label className="truncate font-normal text-sm text-gray-800 flex-auto">
-                    {upload.fileName}
-                  </Label>
-                  <span className="text-gray-500 font-normal text-xs">
+                  <div className="flex-1 flex gap-2 items-center min-w-0 truncate">
+                    <FileText
+                      className={`${props.getfileIconColor(
+                        upload.fileName
+                      )} w-6 flex-shrink-0`}
+                      size={20}
+                    />
+
+                      {/* Helps to be responsive and introduces the elipsis. if inline-block it inline-flex instead, ellipsis fails - inline-block truncate flex-grow w-[0px] overflow-hidden text-ellipsis whitespace-nowrap */}
+                    <Label className="inline-block truncate flex-grow w-[0px] overflow-hidden text-ellipsis whitespace-nowrap font-normal text-xs sm:text-sm text-gray-800 text-left">
+                      {upload.fileName}
+                    </Label>
+                  </div>
+                  <span className="text-gray-500 font-normal text-xs flex-shrink-0">
                     {formatBytes(upload.fileSize)}
                   </span>
                 </Button>
@@ -152,7 +163,7 @@ const PreviouslyUploaded = ({ ...props }) => {
             {!props.prevUploads.length && (
               <>
                 <Separator className="my-3" />
-                <div className=" text-sm text-gray-700 text-left">
+                <div className=" text-xs text-gray-700 text-left wrap-break-word">
                   0 files were found
                 </div>
               </>
@@ -384,14 +395,11 @@ const Dashboard = () => {
       setPreviousUploadsLoading(true);
       let response;
       try {
-        response = await axios.get(
-          `${apiUrl}/api/me/previous-uploads`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        response = await axios.get(`${apiUrl}/api/me/previous-uploads`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         const prevUploaded = response.data;
         setDisplayPrevUploads(true); // show after fetch
         console.log(response.data);
@@ -406,7 +414,7 @@ const Dashboard = () => {
           }
         }
 
-        ErrorToast("Error loading previous uploads");
+        ErrorToast(`${error.response.status}: Error loading previous uploads`);
       } finally {
         setPreviousUploadsLoading(false);
       }
@@ -471,16 +479,12 @@ const Dashboard = () => {
 
         try {
           const token = localStorage.getItem("token");
-          const response = await axios.post(
-            `${apiUrl}/api/upload`,
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "X-Socket-ID": socketId,
-              },
-            }
-          );
+          const response = await axios.post(`${apiUrl}/api/upload`, formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "X-Socket-ID": socketId,
+            },
+          });
 
           // We rely on Socket IO for status. We are using main axios response for fatal HTTP errors.
           if (response.status >= 200 && response.status < 300) {
@@ -771,7 +775,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Simulate Fetch delay
+
       try {
         const response = await axios.get(`${apiUrl}/api/users/me`, {
           headers: {
@@ -788,6 +792,7 @@ const Dashboard = () => {
 
         // Now that data is available, calc average score color
         getAvScoreColor(response.data);
+        setIsLoading(false);
       } catch (error) {
         const responseObject = error.response;
         console.log("resobj", responseObject);
@@ -814,8 +819,6 @@ const Dashboard = () => {
           localStorage.clear("token");
           navigate("/login");
         }
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -827,52 +830,77 @@ const Dashboard = () => {
       <Helmet>
         <title>
           {`${dashboardData?.user ? dashboardData?.user.fName.trim() : ""}
-          ${dashboardData?.user ? dashboardData?.user.fName.endsWith("s") ? "'" : "'s" : ""} Dashboard -
+          ${
+            dashboardData?.user
+              ? dashboardData?.user.fName.endsWith("s")
+                ? "'"
+                : "'s"
+              : ""
+          } Dashboard -
           Quizzem`}
         </title>
       </Helmet>
       <div className="w-full max-w-full bg-gradient-to-b from-gray-50 to-blue-50">
-        <header className="w-full grid grid-cols-2 items-center text-slate-500 shadow-sm px-4 md:px-8 py-6 z-50 sticky top-0 backdrop-blur-sm bg-white/80">
+        <header className="w-full grid grid-cols-2 items-center text-slate-500 shadow-sm px-4 md:px-8 py-4 sm:py-6 z-50 sticky top-0 backdrop-blur-sm bg-white/80">
           {isLoading ? (
-            <Skeleton className="w-[100px] h-[32px]" /> // Skeleton for AppLogo
+            <Skeleton className="w-[80px] sm:w-[100px] h-[32px]" /> // Skeleton for AppLogo
           ) : (
             <AppLogo />
           )}
 
-          <div className="flex justify-end items-center flex-end gap-3">
+          <div className="flex justify-end items-center gap-2 md:gap-3">
+            {" "}
+            {/* Reduced gap on smaller screens */}
             {isLoading ? (
               // Skeleton for Avatar, Name, Email, Settings Dropdown
-              <div className="flex items-center gap-3">
-                <Skeleton className="w-[40px] h-[40px] rounded-full" />
-                <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Skeleton className="w-[32px] h-[32px] md:w-[40px] md:h-[40px] rounded-full" />{" "}
+                {/* Smaller skeleton avatar on mobile */}
+                <div className="hidden md:flex flex-col gap-1">
+                  {" "}
+                  {/* Hide text skeleton on mobile */}
                   <Skeleton className="w-[80px] h-[18px]" />
                   <Skeleton className="w-[120px] h-[14px]" />
                 </div>
-                <Skeleton className="w-[36px] h-[36px] rounded-md" />
+                {/* Show smaller name skeleton on mobile */}
+                <div className="flex md:hidden flex-col gap-1">
+                  <Skeleton className="w-[60px] h-[16px]" />
+                </div>
+                <Skeleton className="w-[32px] h-[32px] md:w-[36px] md:h-[36px] rounded-md" />{" "}
+                {/* Smaller skeleton icon on mobile */}
               </div>
             ) : (
               <>
-                <Avatar className="border-2 border-blue-100 grow-0 size-10">
+                <Avatar className="border-2 border-blue-100 grow-0 size-10 md:size-12">
+                  {" "}
+                  {/* Smaller avatar on mobile */}
                   <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback className="bg-blue-500 text-white">
+                  <AvatarFallback className="bg-blue-500 text-white text-xs md:text-sm">
+                    {" "}
+                    {/* Smaller text in avatar on mobile */}
                     {dashboardData?.user.fName
                       ? `${dashboardData?.user.fName.slice(0, 1)}`
                       : "CN"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col">
-                  <p className="font-medium text-gray-700">
+                {/* Hide email on smaller screens */}
+                <div className="hidden md:flex flex-col items-end">
+                  <p className="font-medium text-gray-700 text-sm">
+                    {" "}
+                    {/* Adjusted text size */}
                     {dashboardData?.user.fName}
                   </p>
                   <p className="text-[12px]">{dashboardData?.user.email}</p>
                 </div>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger
-                    className="size-9 inline-flex justify-center items-center p-2 rounded-md hover:bg-gray-100 whitespace-nowrap"
+                    className="size-8 md:size-9 inline-flex justify-center items-center p-1.5 md:p-2 rounded-md hover:bg-gray-100 whitespace-nowrap" // Adjusted size and padding
                     onMouseEnter={() => setSettingsHovered(true)}
                     onMouseLeave={() => setSettingsHovered(false)}
                   >
                     <Settings
+                      size={18} // Explicit size, Tailwind size classes might conflict
                       color={
                         settingsHovered
                           ? "oklch(62.3% 0.214 259.815)"
@@ -880,64 +908,82 @@ const Dashboard = () => {
                       }
                     />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="mt-1 mr-6">
+                  <DropdownMenuContent className="mt-1 mr-2 md:mr-6">
+                    {" "}
+                    {/* Adjusted margin */}
                     <DropdownMenuLabel className="text-left">
                       My Account
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    {/* Dropdown items remain largely the same, maybe adjust padding/font if needed */}
                     <div className="p-1 min-w-50">
                       <DropdownMenuItem className="flex p-2 items-center gap-4 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0">
                         <User />
                         <span>Profile</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="flex gap-4">
-                        <Settings />
+                      <DropdownMenuItem className="flex gap-4 p-2">
+                        {" "}
+                        {/* Added padding */}
+                        <Settings className="size-4 shrink-0" />{" "}
+                        {/* Explicit size */}
                         <span>Preferences</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="flex gap-4 items-center">
-                        <CircleHelp />
+                      <DropdownMenuItem className="flex gap-4 items-center p-2">
+                        {" "}
+                        {/* Added padding */}
+                        <CircleHelp className="size-4 shrink-0" />{" "}
+                        {/* Explicit size */}
                         <span>Support</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        className={`${isLoading ? "opacity-50": "text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500"}`}
+                        className={`${
+                          isLoading
+                            ? "opacity-50"
+                            : "text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500"
+                        } p-2`} // Added padding
                         disabled={isLoading}
                         onClick={async (e) => {
                           e.preventDefault();
                           const logout = async () => {
                             try {
-                              setIsLoading(true)
+                              setIsLoading(true);
                               await axios.get(`${apiUrl}/api/auth/logout`, {
                                 withCredentials: true,
                                 headers: {
-                                  Authorization: `Bearer ${localStorage.getItem("token")}`
-                                }
-                              })
+                                  Authorization: `Bearer ${localStorage.getItem(
+                                    "token"
+                                  )}`,
+                                },
+                              });
                               localStorage.clear();
                               SuccessToast("Logout success!");
-                              await new Promise (resolve => setTimeout(resolve, 2500));
+                              await new Promise((resolve) =>
+                                setTimeout(resolve, 2500)
+                              );
                               setIsLoading(false);
                               navigate("/login");
                             } catch (error) {
-                              console.log(error)
+                              console.log(error);
                               setIsLoading(false);
-                              const refresh = error?.response?.data.refresh === true;
+                              const refresh =
+                                error?.response?.data.refresh === true;
                               if (refresh) {
                                 const x = await refreshAccess();
                                 if (x) {
-                                  return await logout()
+                                  return await logout();
                                 } else {
                                   ErrorToast("Error logging you out.");
                                 }
                               }
                               ErrorToast("An error occurred.");
                             }
-
-                          }
-                          await logout()
+                          };
+                          await logout();
                         }}
                       >
-                        <LogOut />
+                        <LogOut className="size-4 shrink-0" />{" "}
+                        {/* Explicit size */}
                         <span>Log out</span>
                       </DropdownMenuItem>
                     </div>
@@ -948,7 +994,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="px-4 md:px-8 py-2 pb-8">
+        <main className="px-2 md:px-8 py-2 pb-8">
           {isLoading ? (
             <div className="my-4">
               <Skeleton className="w-1/3 h-8 mb-2" />
@@ -1099,14 +1145,13 @@ const Dashboard = () => {
 
           {/* Generation and Quizzes Section */}
           <section className="grid lg:grid-cols-[2fr_1fr] gap-0 sm:gap-5 lg:mt-12 lg:relative lg:items-start">
-            {/* Generate Quiz Card - Assuming this doesn't need a skeleton based on main isLoading */}
             <card.Card className="shadow-lg lg:sticky lg:bottom-0">
               <form onSubmit={handleSubmission}>
                 <card.CardHeader className="bg-gray-50 p-5">
-                  <card.CardTitle className="font-medium text-lg">
+                  <card.CardTitle className="font-medium text-base sm:text-lg">
                     Generate New Quiz
                   </card.CardTitle>
-                  <card.CardDescription>
+                  <card.CardDescription className="text-[13px]">
                     Upload a document or provide a URL to customize your quiz
                   </card.CardDescription>
                 </card.CardHeader>
@@ -1122,10 +1167,13 @@ const Dashboard = () => {
                       disabled={isLoading || isGenerating}
                     >
                       {prevUploadsLoading ? (
-                        <LoadingSpinner size={14} />
+                        <LoadingSpinner size={15} />
                       ) : (
                         <>
-                          <ListRestart /> Use Previous
+                          <ListRestart />{" "}
+                          <span className="hidden md:inline-flex">
+                            Use Previous
+                          </span>
                         </>
                       )}
                     </Button>
@@ -1379,14 +1427,14 @@ const Dashboard = () => {
                           </div>
 
                           {/* Section for adding file link */}
-                          <div className="flex justify-between items-center gap-2 py-6">
+                          <div className="flex justify-between items-center gap-2 py-4">
                             <Link2 className="text-gray-400" />
                             <Input
-                              placeholder="Place URL here (e.g., public webpage, document link)"
-                              className="text-sm"
+                              placeholder="Place URL here (e.g., Public Webpage, Document Link)"
+                              className="text-xs md:text-sm placeholder:!truncate"
                             />
-                            <Button disabled={true} className="bg-blue-600">
-                              Coming?
+                            <Button disabled={true} className="bg-blue-500 disabled:bg-gray-500">
+                              🌝
                             </Button>
                           </div>
                         </div>
@@ -1400,14 +1448,14 @@ const Dashboard = () => {
                     disabled={isGenerating || !uploadedFile.id}
                     className="my-5 disabled:opacity-80"
                   >
-                    <h3 className="font-medium text-gray-800">
+                    <h3 className="font-medium text-gray-800 text-sm">
                       Customize Quiz
                     </h3>
                     <div className="grid grid-rows-2 sm:grid-cols-2 sm:grid-rows-none sm:gap-8">
                       {/* Set Difficulty */}
                       <div className="mt-5">
                         <Label
-                          className="flex items-center gap-3 mb-3"
+                          className="flex items-center gap-3 mb-3 text-[13px]"
                           htmlFor="difficulty-group"
                         >
                           <span className="text-gray-700">Difficulty</span>
@@ -1424,7 +1472,7 @@ const Dashboard = () => {
                           className={`w-full `}
                         >
                           <ToggleGroupItem
-                            className={`transition-all duration-500 ${
+                            className={`transition-all duration-500 text-sm ${
                               difficultyValue == "normal"
                                 ? "!text-blue-600 !bg-blue-200 !border-1 !border-blue-300"
                                 : "text-gray-700 bg-gray-50 border-1"
@@ -1437,7 +1485,7 @@ const Dashboard = () => {
                           <ToggleGroupItem
                             value="hard"
                             aria-label="Toggle hard"
-                            className={`transition-all duration-500 ${
+                            className={`transition-all text-sm duration-500 ${
                               difficultyValue == "hard"
                                 ? "!text-red-600 !bg-red-200 !border-1 !border-red-300"
                                 : "text-gray-700 bg-gray-50 border-1"
@@ -1451,7 +1499,7 @@ const Dashboard = () => {
                       {/* Set Mode */}
                       <div className="mt-5">
                         <Label
-                          className="flex items-center gap-3 mb-3"
+                          className="flex items-center gap-3 mb-3 text-[13px]"
                           htmlFor="mode-group"
                         >
                           <span className="text-gray-700">Mode</span>
@@ -1468,7 +1516,7 @@ const Dashboard = () => {
                           className={`w-full `}
                         >
                           <ToggleGroupItem
-                            className={`transition-all duration-500 ${
+                            className={`transition-all duration-500 text-sm ${
                               modeValue == "study"
                                 ? "!text-blue-600 !bg-blue-200 !border-1 !border-blue-300"
                                 : "text-gray-700 bg-gray-50 border-1"
@@ -1481,7 +1529,7 @@ const Dashboard = () => {
                           <ToggleGroupItem
                             value="exam"
                             aria-label="Toggle hard"
-                            className={`transition-all duration-500 ${
+                            className={`transition-all duration-500 text-sm ${
                               modeValue == "exam"
                                 ? "!text-purple-600 !bg-purple-200 !border-1 !border-purple-300"
                                 : "text-gray-700 bg-gray-50 border-1"
@@ -1501,7 +1549,7 @@ const Dashboard = () => {
                           htmlFor="noOfQuestions"
                         >
                           <div className="text-gray-700 flex items-center gap-3 mb-3">
-                            <span>Number of Questions</span>
+                            <span className="text-[13px]">Number of Questions</span>
                             <ToolTip
                               text="Select Auto to generate as many high-yield
                                   questions as possible from the document. Questions are
@@ -1552,7 +1600,7 @@ const Dashboard = () => {
                           htmlFor="activate-time"
                         >
                           <div className="flex gap-3 flex-shrink">
-                            <span>Time Limit</span>
+                            <span className="text-[13px]">Time Limit</span>
                             <ToolTip
                               text={
                                 !isTimeLimit ? (
@@ -1614,7 +1662,7 @@ const Dashboard = () => {
                     </div>
 
                     <div className="flex flex-col mt-5">
-                      <Label htmlFor="additionalInfo" className="mb-3">
+                      <Label htmlFor="additionalInfo" className="mb-3 text-[13px]">
                         Additional Instructions (Optional)
                       </Label>
                       <Textarea
@@ -1694,7 +1742,6 @@ const Dashboard = () => {
                 </card.CardContent>
 
                 {isLoading ? (
-                  // Skeleton loader for "View All" button area if needed
                   <div className="p-4">
                     <Skeleton className="w-full h-6" />
                   </div>
@@ -1811,8 +1858,8 @@ const Dashboard = () => {
               </card.Card>
             </div>
           </section>
+        <ToastContainer className="w-[200px]"/>
         </main>
-        <ToastContainer />
         <OverlayAnimation isVisible={isOverlayVisible} />
       </div>
     </>

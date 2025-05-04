@@ -2,11 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import AppLogo from "@/components/applogo";
-import OverlayAnimation from "@/components/OverlayAnimation";
+import OverlayAnimation from "@/components/OverlayAnimation.jsx";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import LoadingDots from "@/components/LoadingDots";
+import LoadingDots from "@/components/LoadingDots.jsx";
 
 const VerifyAccount = () => {
   const navigate = useNavigate();
