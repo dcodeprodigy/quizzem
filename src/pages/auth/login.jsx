@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Slider from "../../components/Slider";
+import Slider from "../../components/Slider.jsx";
 import { ToastContainer, toast, Flip } from "react-toastify";
 import axios from "axios"
 import LoadingDots from "@/components/LoadingDots.js";

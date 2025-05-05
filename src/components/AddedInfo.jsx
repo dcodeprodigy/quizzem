@@ -2,7 +2,7 @@ import React from "react";
 import * as tooltip from "./ui/tooltip";
 import { Popover } from "radix-ui";
 import { Info } from "lucide-react";
-import useInputDeviceType from "@/utils/useInputType";
+import useInputDeviceType from "@/utils/userInputType";
 
 const Trigger = () => {
   return <Info size={14} className="hover:text-blue-700" />;
