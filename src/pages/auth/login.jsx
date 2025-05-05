@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import Slider from "@/components/Slider.jsx";
 import { ToastContainer, toast, Flip } from "react-toastify";
 import axios from "axios"
-import LoadingDots from "@/components/LoadingDots.js";
+import LoadingDots from "@/components/LoadingDots";
 import { LoadingToast } from "@/utils/toast.js";
 
 const Tags = () => {
