@@ -573,7 +573,7 @@ const Dashboard = () => {
     }
 
     setStatus("connecting");
-    socketRef.current = io("http://localhost:5000", {});
+    socketRef.current = io(`${apiUrl}`, {});
     const socket = socketRef.current; // Local variable for easier access;
 
     socket.on("connect", () => {
