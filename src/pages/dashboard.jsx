@@ -817,11 +817,13 @@ const Dashboard = () => {
           setLoadingFail(true);
           console.log("Error fetching data: ", responseObject);
           ErrorToast(responseObject?.data.msg);
+          localStorage.clear();
           await Wait();
           navigate("/login");
          } else {
            localStorage.clear("token");
           ErrorToast("Session expired! Redirecting to login...");
+          localStorage.clear();
           await Wait();
           navigate("/login");
         }

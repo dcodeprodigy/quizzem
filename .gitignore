@@ -25,4 +25,4 @@ dist-ssr
 .env
 src/pages/dash-mock.jsx
 src/components/FileUpload.jsx
-public/mock
+public/mock/

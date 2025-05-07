@@ -103,7 +103,7 @@ const LoginPage = () => {
       <Tags />
       <main className="bg-gray-50 flex items-center justify-center max-w-screen text-slate-600 text-[14px]">
         {/* Division for the grid items  */}
-        <div className="rounded-2xl shadow-xl bg-white w-[95%] max-w-[1024px] px-8 my-8 grid grid-cols-1 min-[930px]:grid-cols-2">
+        <div className="rounded-2xl shadow-md md:shadow-xl bg-white w-[95%] max-w-[1024px] px-8 my-8 grid grid-cols-1 min-[930px]:grid-cols-2">
           {/* Left Hand Section */}
           <section className="hidden min-[930px]:block bg-gradient-to-br py-12 px-6">
             <LeftSection />
