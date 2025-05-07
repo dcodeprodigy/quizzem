@@ -9,7 +9,8 @@ import Slider from "@/components/Slider.jsx";
 import { ToastContainer, toast, Flip } from "react-toastify";
 import axios from "axios"
 import LoadingDots from "@/components/LoadingDots";
-import { LoadingToast } from "@/utils/toast.js";
+import { ErrorToast, LoadingToast } from "@/utils/toast.js";
+import Wait from "@/utils/wait";
 
 const Tags = () => {
   return (
@@ -57,19 +58,26 @@ const LoginPage = () => {
       const response = await axios.post(`${apiUrl}/api/auth/login`, {
         email: formState.email,
         password: formState.password,
+      }, {
+        timeout: 30000
       });
 
       toastId = LoadingToast("Login Success! Redirecting...", toastId, "success");
 
       localStorage.setItem("token", response.data?.token);
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await Wait();
       navigate("/dashboard");
     } catch (error) {
       setIsLoading(false);
       console.log(error);
+      const responseObject = error?.response
+
+      if (!responseObject) {
+        return LoadingToast("Network Error: Please check your internet connection and try again.", toastId, "error");
+      }
 
       // append errors to state
-      if (error?.response?.msgs) {
+      if (responseObject?.msgs) {
         const response = error.response.data;
         toastId = LoadingToast("Input validation failed.", toastId, "error");
 
@@ -81,7 +89,7 @@ const LoginPage = () => {
         });
       } else {
         // Toast Notification
-        const toastMsg = error?.response?.data?.msg || error?.response?.statusText || "Unknown error";
+        const toastMsg = responseObject?.data?.msg || responseObject?.statusText || "An error occured";
         toastId = LoadingToast(toastMsg, toastId, "error");
       }
     }

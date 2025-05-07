@@ -7,6 +7,8 @@ import Slider from "@/components/Slider.jsx";
 import axios from "axios";
 import { Label } from "@/components/ui/label";
 import { ToastContainer, toast, Flip } from "react-toastify";
+import { LoadingToast } from "@/utils/toast";
+import Wait from "@/utils/wait";
 
 
 const Tags = () => {
@@ -74,22 +76,27 @@ const SignupPage = () => {
           lName: formState.lName,
           email: formState.email,
           password: formState.password,
+        },
+        {
+          timeout: 30000
         }
       );
 
       toastId = toast.update(toastId, {
-        render: "Signup successful! Redirecting...",
+        render: "Signup successful! Check your email address to verify your account.",
         type: "success",
         isLoading: false,
         autoClose: 5000,
       });
-
-      localStorage.setItem("token", response.data.token); // set token
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-      navigate("/dashboard");
+      await Wait(4500);
+      navigate("/login");
     } catch (error) {
-      console.log(error);
-      const response = error.response.data;
+      // console.log(error);
+      const response = error?.response?.data;
+      if (!response) {
+        return LoadingToast("Network error: Please check your internet connection and try again.", toastId, "error");
+      }
+
       // append errors to state
       if (response.msgs) {
         toastId = toast.update(toastId, {
@@ -105,6 +112,7 @@ const SignupPage = () => {
             [msg.path]: msg.msg,
           }));
         });
+        return
       } else {
         // Toast Notification
         toastId = toast.update(toastId, {
@@ -113,6 +121,7 @@ const SignupPage = () => {
           isLoading: false,
           autoClose: 5000,
         });
+        return
       }
     }
   };

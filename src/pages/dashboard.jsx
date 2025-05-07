@@ -66,6 +66,7 @@ import {
   SuccessToast,
 } from "@/utils/toast";
 import OverlayAnimation from "@/components/OverlayAnimation";
+import Wait from "@/utils/wait";
 
 const WelcomeMsg = ({ dashboardData }) => {
   return (
@@ -778,26 +779,25 @@ const Dashboard = () => {
 
       try {
         const response = await axios.get(`${apiUrl}/api/users/me`, {
+          timeout: 30000,
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        await new Promise((resolve) => {
-          setTimeout(resolve, 2000);
-        });
-        console.log(response);
-
         // Set Dashboard Data
         setDashboardData(response.data);
-
         // Now that data is available, calc average score color
         getAvScoreColor(response.data);
         setIsLoading(false);
       } catch (error) {
-        const responseObject = error.response;
-        console.log("resobj", responseObject);
+        const responseObject = error?.response;
+        if (!responseObject) {
+          /**
+           * @todo  show retry button using react hot toast */
+          return ErrorToast("Network Error: Please check your internet connection and reload the page to try again.");
+        }
 
-        if (responseObject.data.refresh) {
+        if (responseObject?.data?.refresh) {
           const success = await refreshAccess();
           if (success) {
             // if refresh was successful, retry request
@@ -805,18 +805,24 @@ const Dashboard = () => {
             return fetchData();
           } else {
             // if refresh failed, clear local storage and redirect to login
+            ErrorToast("Session expired!");
             localStorage.clear("token");
+            await Wait();
             return navigate("/login");
           }
         }
 
         // if there is no refresh flag, then set LoadingFail to true. This means that loading failed not due to token expiry but other reasons.
-        if (responseObject.status !== 401) {
+        if (responseObject?.status !== 401) {
           setLoadingFail(true);
           console.log("Error fetching data: ", responseObject);
-        } else {
-          console.log("Token expired or invalid. Redirecting to login...");
-          localStorage.clear("token");
+          ErrorToast(responseObject?.data.msg);
+          await Wait();
+          navigate("/login");
+         } else {
+           localStorage.clear("token");
+          ErrorToast("Session expired! Redirecting to login...");
+          await Wait();
           navigate("/login");
         }
       }
