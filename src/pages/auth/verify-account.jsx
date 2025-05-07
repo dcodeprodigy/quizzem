@@ -95,10 +95,10 @@ const VerifyAccount = () => {
 
   return (
     <>
+      <div className="container max-w-[65%] p-4 m-auto flex flex-col items-center justify-center h-screen">
       <Helmet>
         <title>Verify Your Account - Quizzem</title>
       </Helmet>
-      <div className="container max-w-[65%] p-4 m-auto flex flex-col items-center justify-center h-screen">
         {!isLoading && (
           <div className="bg-white max-w-lg mx-auto p-8 rounded-2xl shadow-md text-center text-gray-800 relative overflow-hidden">
             {/* Subtle blur gradient overlay */}

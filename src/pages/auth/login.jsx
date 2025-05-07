@@ -81,7 +81,7 @@ const LoginPage = () => {
         });
       } else {
         // Toast Notification
-        const toastMsg = error?.response?.msg || error?.data?.msg || error?.response?.statusText || "Unknown error";
+        const toastMsg = error?.response?.data.msg || error?.data?.msg || error?.response?.statusText || "Unknown error";
         toastId = LoadingToast(toastMsg, toastId, "error");
       }
     }
