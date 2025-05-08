@@ -1296,7 +1296,7 @@ const Dashboard = () => {
                                       size={20}
                                     />
                                     <div className="!max-w-full whitespace-nowrap flex-1 flex truncate items-start justify-center flex-col">
-                                      <span className="text-gray-800 font-medium text-sm inline-block truncate flex-grow overflow-hidden text-ellipsis whitespace-nowrap">
+                                      <span className="text-gray-800 font-medium inline-block truncate flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-xs sm:text-smn w-0">
                                         {selectedFile.name}
                                       </span>
                                       <span className="text-gray-500 text-xs inline-block">
@@ -1309,9 +1309,13 @@ const Dashboard = () => {
                                     variant="outline"
                                     disabled={isGenerating}
                                     onClick={
-                                      !isUploading && uploadedFile.id // When file is already uploaded and we are not uploading anymore
+                                      (e) => {
+                                        e.preventDefault();
+                                        !isUploading && uploadedFile.id // When file is already uploaded and we are not uploading anymore
                                         ? (e) => clearUpload(e) // helps cancel upload when <Trash2/>
                                         : (e) => cancelUpload(e) // helps clear uploaded when <X/>
+                                      }
+                                      
                                     }
                                   >
                                     {!isUploading && uploadedFile.id ? (
@@ -1330,7 +1334,7 @@ const Dashboard = () => {
                               {/* </div> */}
                               {uploadedFile.id ? (
                                 <div className="flex items-center gap-2 text-xs sm:text-sm text-green-600">
-                                  <CircleCheck size={15} />
+                                  <CircleCheck size={13} className="max-[500px]:flex-shrink-0"/>
                                   {selectedFile.name} Uploaded Successfully!
                                 </div>
                               ) : (

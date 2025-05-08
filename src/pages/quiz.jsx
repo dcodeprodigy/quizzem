@@ -272,7 +272,6 @@ const QuizPage = ({ isExam }) => {
           const success = await refreshAccess();
           if (success) {
             // if refresh was successful, retry request
-            setIsLoading(true);
             return await checkAnswer();
           } else {
             // if refresh failed, clear local storage and redirect to login
@@ -285,7 +284,7 @@ const QuizPage = ({ isExam }) => {
         ErrorToast(
           error?.response?.data?.msg ||
           error?.response?.data ||
-          "Client Side Error"
+          "A client side error occured."
         );
         // re-enable check answer button if there is an error
         mutateQuestionState(false);
@@ -293,7 +292,6 @@ const QuizPage = ({ isExam }) => {
       } finally {
         setDisableButtons(false);
         setIsRequesting(false);
-        setIsLoading(false);
       }
     }
   };
