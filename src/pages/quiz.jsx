@@ -220,7 +220,7 @@ const QuizPage = ({ isExam }) => {
         const questionId = quizState[currentQuestion - 1].questionId;
         const selectedAnswer = quizState[currentQuestion - 1].selectedAnswer;
         const response = await axios.post(
-          `${apiUrl}/api/me/quiz/s/answer`,
+          `${apiUrl}/api/me/quiz/s/answer/${questionId}`,
           {
             quizId,
             questionId,

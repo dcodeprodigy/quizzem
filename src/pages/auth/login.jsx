@@ -66,7 +66,7 @@ const LoginPage = () => {
 
       localStorage.setItem("token", response.data?.token);
       await Wait();
-      navigate("/dashboard");
+      return navigate("/dashboard");
     } catch (error) {
       setIsLoading(false);
       console.log(error);

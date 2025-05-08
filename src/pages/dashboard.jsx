@@ -11,7 +11,8 @@ import MapQuizHistory from "@/components/QuizzHistory.jsx";
 import Description from "@/components/AddedInfo.jsx";
 import { Helmet } from "react-helmet-async";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {CircleCheck,
+import {
+  CircleCheck,
   ClipboardList,
   Delete,
   FileStack,
@@ -101,10 +102,10 @@ const PreviouslyUploaded = ({ ...props }) => {
           </Label>
           <div className="px-3 pb-3 mb-4 w-full">
             {console.log("The prevUploads before error: ", props.prevUploads)}
-            {console.log(
+            {/* {console.log(
               "The uploadedFile object before error: ",
               props.selectedFile
-            )}
+            )} */}
             {props.prevUploads.map((upload) => {
               return (
                 <Button
@@ -150,7 +151,7 @@ const PreviouslyUploaded = ({ ...props }) => {
                       size={20}
                     />
 
-                      {/* Helps to be responsive and introduces the elipsis. if inline-block it inline-flex instead, ellipsis fails - inline-block truncate flex-grow w-[0px] overflow-hidden text-ellipsis whitespace-nowrap */}
+                    {/* Helps to be responsive and introduces the elipsis. if inline-block is inline-flex instead, ellipsis fails - inline-block truncate flex-grow w-[0px] overflow-hidden text-ellipsis whitespace-nowrap */}
                     <Label className="inline-block truncate flex-grow w-[0px] overflow-hidden text-ellipsis whitespace-nowrap font-normal text-xs sm:text-sm text-gray-800 text-left">
                       {upload.fileName}
                     </Label>
@@ -518,7 +519,7 @@ const Dashboard = () => {
             console.log("Upload failed FATALLY!");
             ErrorToast(
               response.data.msg ||
-                "Error uploading file. Make sure you are connected to the internet."
+              "Error uploading file. Make sure you are connected to the internet."
             );
           }
         } catch (error) {
@@ -531,7 +532,7 @@ const Dashboard = () => {
               await new Promise((resolve) =>
                 resolve(setTimeout(ErrorToast("Session expired.")), 2500)
               );
-              navigate("/login");
+              return navigate("/login");
             }
           }
 
@@ -541,11 +542,11 @@ const Dashboard = () => {
           // Set error message
           setErrorMsg(
             error?.response?.data?.msg ||
-              "Error:  Unable to upload selected file."
+            "Error:  Unable to upload selected file."
           );
           ErrorToast(
             error?.response?.data?.msg ||
-              "Error:  Unable to upload selected file."
+            "Error:  Unable to upload selected file."
           );
         } finally {
           setProgress(0);
@@ -556,7 +557,7 @@ const Dashboard = () => {
     }
   };
 
-  const cancelUpload = async () => {};
+  const cancelUpload = async () => { };
 
   const clearUpload = (e) => {
     e.preventDefault();
@@ -754,10 +755,9 @@ const Dashboard = () => {
 
       const quizData = response.data;
       navigate(
-        `${
-          quizData.mode === "exam"
-            ? `/quiz/e/${quizData.quizId}`
-            : `/quiz/s/${quizData.quizId}`
+        `${quizData.mode === "exam"
+          ? `/quiz/e/${quizData.quizId}`
+          : `/quiz/s/${quizData.quizId}`
         }`,
         { state: quizData }
       );
@@ -818,12 +818,7 @@ const Dashboard = () => {
           console.log("Error fetching data: ", responseObject);
           ErrorToast(responseObject?.data.msg);
           localStorage.clear();
-          await Wait();
-          navigate("/login");
-         } else {
-           localStorage.clear("token");
-          ErrorToast("Session expired! Redirecting to login...");
-          localStorage.clear();
+          localStorage.removeItem("token");
           await Wait();
           navigate("/login");
         }
@@ -838,13 +833,12 @@ const Dashboard = () => {
       <Helmet>
         <title>
           {`${dashboardData?.user ? dashboardData?.user.fName.trim() : ""}
-          ${
-            dashboardData?.user
+          ${dashboardData?.user
               ? dashboardData?.user.fName.endsWith("s")
                 ? "'"
                 : "'s"
               : ""
-          } Dashboard -
+            } Dashboard -
           Quizzem`}
         </title>
       </Helmet>
@@ -945,11 +939,10 @@ const Dashboard = () => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        className={`${
-                          isLoading
+                        className={`${isLoading
                             ? "opacity-50"
                             : "text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500"
-                        } p-2`} // Added padding
+                          } p-2`} // Added padding
                         disabled={isLoading}
                         onClick={async (e) => {
                           e.preventDefault();
@@ -1210,13 +1203,11 @@ const Dashboard = () => {
                     >
                       {!selectedFile.name && !displayPrevUploaded && (
                         <div
-                          className={`relative flex items-center justify-center w-full rounded-lg border-2 border-dashed border-gray-300 transition-all duration-200 mb-6 ${
-                            isDragging
+                          className={`relative flex items-center justify-center w-full rounded-lg border-2 border-dashed border-gray-300 transition-all duration-200 mb-6 ${isDragging
                               ? "border-blue-500 bg-blue-50 scale-105 shadow-inner"
                               : "bg-white hover:bg-gray-50"
-                          } ${
-                            isGenerating ? "cursor-not-allowed bg-gray-100" : ""
-                          }`}
+                            } ${isGenerating ? "cursor-not-allowed bg-gray-100" : ""
+                            }`}
                           onDragOver={handleDragOver}
                           onDragLeave={handleDragLeave}
                           onDrop={(e) => handleDropOrSelect(e, true)}
@@ -1230,30 +1221,24 @@ const Dashboard = () => {
                             htmlFor="file-dropzone"
                             disabled={isLoading}
                             aria-disabled={isLoading}
-                            className={`flex flex-col items-center justify-center w-full h-32 sm:h-36 p-4 text-center transition-colors ${
-                              !isLoading && "group"
-                            } ${
-                              isGenerating
+                            className={`flex flex-col items-center justify-center w-full h-32 sm:h-36 p-4 text-center transition-colors ${!isLoading && "group"
+                              } ${isGenerating
                                 ? "cursor-not-allowed text-gray-400"
                                 : isDragging
-                                ? "cursor-copy text-blue-600"
-                                : `cursor-pointer text-gray-500 ${
-                                    !isLoading && "hover:bg-gray-50"
+                                  ? "cursor-copy text-blue-600"
+                                  : `cursor-pointer text-gray-500 ${!isLoading && "hover:bg-gray-50"
                                   }`
-                            }`}
+                              }`}
                           >
                             <CloudUpload
-                              className={`w-8 h-8 sm:w-10 sm:h-10 mb-3 transition-transform ${
-                                !isLoading && "group-hover:text-blue-600"
-                              }  ${
-                                isDragging && !isGenerating
+                              className={`w-8 h-8 sm:w-10 sm:h-10 mb-3 transition-transform ${!isLoading && "group-hover:text-blue-600"
+                                }  ${isDragging && !isGenerating
                                   ? "animate-bounce"
                                   : ""
-                              } ${
-                                selectedFile.extension &&
+                                } ${selectedFile.extension &&
                                 selectedFile.fileIconColor &&
                                 "hidden"
-                              }`}
+                                }`}
                             />
 
                             {!selectedFile.name ? (
@@ -1301,26 +1286,26 @@ const Dashboard = () => {
        */}
                           {/* Make sure to clear the state for this to be cleared on error */}
                           {selectedFile.name && (
-                            <section className="bg-gray-50 py-4 px-4 rounded-md border space-y-3">
+                            <section className="bg-gray-50 py-4 px-4 rounded-md border space-y-3 max-w-full">
                               {/* For the top part */}
-                              <div>
-                                <div className="flex justify-between items-start w-full">
-                                  <div className="flex flex-row items-center justify-center gap-3">
+
+                                <div className="flex justify-between items-start w-full overflow-hidden truncate">
+                                  <div className="flex flex-row items-center justify-center gap-3 max-w-full truncate">
                                     <FileText
-                                      className={`${selectedFile.fileIconColor} w-6`}
+                                      className={`${selectedFile.fileIconColor} w-6 flex-shrink-0`}
                                       size={20}
                                     />
-                                    <div className="">
-                                      <span className="text-gray-800 font-medium truncate text-sm block">
+                                    <div className="!max-w-full whitespace-nowrap flex-1 flex truncate items-start justify-center flex-col">
+                                      <span className="text-gray-800 font-medium text-sm inline-block truncate flex-grow overflow-hidden text-ellipsis whitespace-nowrap">
                                         {selectedFile.name}
                                       </span>
-                                      <span className="text-gray-500 text-xs block">
+                                      <span className="text-gray-500 text-xs inline-block">
                                         {selectedFile.size}
                                       </span>
                                     </div>
                                   </div>
                                   <Button
-                                    className="h-7 w-7 shrink-0 group hover:bg-red-100 bg-transparent border-none shadow-none align-top rounded-lg p-0"
+                                    className="h-7 w-7 group hover:bg-red-100 bg-transparent border-none shadow-none align-top rounded-lg p-0 flex-shrink-0"
                                     variant="outline"
                                     disabled={isGenerating}
                                     onClick={
@@ -1342,11 +1327,11 @@ const Dashboard = () => {
                                     )}
                                   </Button>
                                 </div>
-                              </div>
+                              {/* </div> */}
                               {uploadedFile.id ? (
-                                <div className="flex items-center gap-2 text-sm text-green-600">
+                                <div className="flex items-center gap-2 text-xs sm:text-sm text-green-600">
                                   <CircleCheck size={15} />
-                                  {selectedFile.name} uploaded successfully!
+                                  {selectedFile.name} Uploaded Successfully!
                                 </div>
                               ) : (
                                 <div className="flex justify-center items-center gap-3 my-4">
@@ -1370,7 +1355,7 @@ const Dashboard = () => {
 
                               {uploadedFile.id &&
                                 uploadedFile.range.start !=
-                                  uploadedFile.range.end && (
+                                uploadedFile.range.end && (
                                   <motion.div
                                     // key="page-range" // Crucial for animation stability
                                     initial={{ opacity: 0, y: -10 }}
@@ -1395,7 +1380,7 @@ const Dashboard = () => {
                                           onChange={handleStartChange}
                                           className="w-20 h-8 text-sm"
                                           disabled={isGenerating}
-                                          // aria-invalid={!!rangeErrors.start}
+                                        // aria-invalid={!!rangeErrors.start}
                                         />
                                         <span className="text-gray-400">-</span>
                                         <Input
@@ -1404,7 +1389,7 @@ const Dashboard = () => {
                                           onChange={handleEndChange}
                                           className="w-20 h-8 text-sm"
                                           disabled={isGenerating}
-                                          // aria-invalid={!!rangeErrors.end}
+                                        // aria-invalid={!!rangeErrors.end}
                                         />
                                       </div>
 
@@ -1480,11 +1465,10 @@ const Dashboard = () => {
                           className={`w-full `}
                         >
                           <ToggleGroupItem
-                            className={`transition-all duration-500 text-sm ${
-                              difficultyValue == "normal"
+                            className={`transition-all duration-500 text-sm ${difficultyValue == "normal"
                                 ? "!text-blue-600 !bg-blue-200 !border-1 !border-blue-300"
                                 : "text-gray-700 bg-gray-50 border-1"
-                            }`}
+                              }`}
                             value="normal"
                             aria-label="Toggle normal"
                           >
@@ -1493,11 +1477,10 @@ const Dashboard = () => {
                           <ToggleGroupItem
                             value="hard"
                             aria-label="Toggle hard"
-                            className={`transition-all text-sm duration-500 ${
-                              difficultyValue == "hard"
+                            className={`transition-all text-sm duration-500 ${difficultyValue == "hard"
                                 ? "!text-red-600 !bg-red-200 !border-1 !border-red-300"
                                 : "text-gray-700 bg-gray-50 border-1"
-                            }`}
+                              }`}
                           >
                             Hard
                           </ToggleGroupItem>
@@ -1524,11 +1507,10 @@ const Dashboard = () => {
                           className={`w-full `}
                         >
                           <ToggleGroupItem
-                            className={`transition-all duration-500 text-sm ${
-                              modeValue == "study"
+                            className={`transition-all duration-500 text-sm ${modeValue == "study"
                                 ? "!text-blue-600 !bg-blue-200 !border-1 !border-blue-300"
                                 : "text-gray-700 bg-gray-50 border-1"
-                            }`}
+                              }`}
                             value="study"
                             aria-label="Toggle study"
                           >
@@ -1537,11 +1519,10 @@ const Dashboard = () => {
                           <ToggleGroupItem
                             value="exam"
                             aria-label="Toggle hard"
-                            className={`transition-all duration-500 text-sm ${
-                              modeValue == "exam"
+                            className={`transition-all duration-500 text-sm ${modeValue == "exam"
                                 ? "!text-purple-600 !bg-purple-200 !border-1 !border-purple-300"
                                 : "text-gray-700 bg-gray-50 border-1"
-                            }`}
+                              }`}
                           >
                             Exam
                           </ToggleGroupItem>
@@ -1656,9 +1637,8 @@ const Dashboard = () => {
                                   onChange={(e) => validateTimeLimit(e)}
                                 />
                                 <span
-                                  className={`${
-                                    noOfQuestions === "auto" && "text-gray-400"
-                                  }`}
+                                  className={`${noOfQuestions === "auto" && "text-gray-400"
+                                    }`}
                                 >
                                   minutes
                                 </span>
@@ -1685,10 +1665,9 @@ const Dashboard = () => {
                 </card.CardContent>
                 <card.CardFooter className="bg-gray-50 py-6">
                   <Button
-                    className={`w-full bg-blue-600 text-white py-5 hover:bg-blue-700 cursor-pointer ${
-                      isGenerating &&
+                    className={`w-full bg-blue-600 text-white py-5 hover:bg-blue-700 cursor-pointer ${isGenerating &&
                       "bg-blue-50 border border-blue-500 text-blue-700 font-medium"
-                    }`}
+                      }`}
                     type="submit"
                     disabled={isGenerating || isLoading || !uploadedFile.id}
                   >
@@ -1762,9 +1741,8 @@ const Dashboard = () => {
                             className={`${showFullSaved && "hidden"}`}
                           />
                           <card.CardFooter
-                            className={`bg-gray-50 py-4 ${
-                              showFullSaved && "hidden"
-                            }`}
+                            className={`bg-gray-50 py-4 ${showFullSaved && "hidden"
+                              }`}
                           >
                             <Button
                               variant="link"
@@ -1843,9 +1821,8 @@ const Dashboard = () => {
                             className={`${showFullHistory && "hidden"}`}
                           />
                           <card.CardFooter
-                            className={`bg-gray-50 py-4 ${
-                              showFullHistory && "hidden"
-                            }`}
+                            className={`bg-gray-50 py-4 ${showFullHistory && "hidden"
+                              }`}
                           >
                             <Button
                               variant="link"
@@ -1866,7 +1843,7 @@ const Dashboard = () => {
               </card.Card>
             </div>
           </section>
-        <ToastContainer className="w-[200px]"/>
+          <ToastContainer className="w-[200px]" />
         </main>
         <OverlayAnimation isVisible={isOverlayVisible} />
       </div>

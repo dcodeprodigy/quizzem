@@ -89,7 +89,7 @@ const SignupPage = () => {
         autoClose: 5000,
       });
       await Wait(4500);
-      navigate("/login");
+      return navigate("/login");
     } catch (error) {
       // console.log(error);
       const response = error?.response?.data;

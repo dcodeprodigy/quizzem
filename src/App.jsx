@@ -1,5 +1,5 @@
 import {UserProvider} from "../context/user";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import SignupPage from "./pages/auth/signup";
 import LoginPage from "./pages/auth/login";
@@ -8,14 +8,8 @@ import QuizPage from "./pages/quiz";
 import VerifyAccount from "./pages/auth/verify-account";
 
 function App() {
-  const [isAuth, setIsAuth] = useState(null);
-  useEffect(() => {
-    const checkAuth = () => {
-      const tokenExists = localStorage.getItem("token") ? true : false;
-      setIsAuth(tokenExists);
-    }
-    checkAuth();
-  }, [isAuth])
+  const isAuth = localStorage.getItem("token") ? true : false;
+
 
   return (
     <Router>
