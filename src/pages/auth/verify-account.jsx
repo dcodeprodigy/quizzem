@@ -29,7 +29,7 @@ const VerifyAccount = () => {
 
   const getImageAltText = () => {
     if (serverResponse.status === 200) {
-      return "Email Verified";
+      return "Email Verified!";
     } else if (serverResponse.status === 202) {
       return "Check inbox for verification email";
     } else {
@@ -56,6 +56,7 @@ const VerifyAccount = () => {
         );
 
         // Set Server Response
+        console.log(response)
         setResponseFromServer(response);
 
         // Set Access token in local storage
@@ -95,12 +96,12 @@ const VerifyAccount = () => {
 
   return (
     <>
-      <div className="container max-w-[65%] p-4 m-auto flex flex-col items-center justify-center h-screen">
+      <div className="contaner p-2 m-auto flex flex-col items-center justify-center h-screen">
       <Helmet>
         <title>Verify Your Account - Quizzem</title>
       </Helmet>
         {!isLoading && (
-          <div className="bg-white max-w-lg mx-auto p-8 rounded-2xl shadow-md text-center text-gray-800 relative overflow-hidden">
+          <div className="w-[95%] max-w-2xl bg-white mx-auto px-8 py-12 rounded-2xl shadow-xs text-center text-gray-800 relative overflow-hidden">
             {/* Subtle blur gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-transparent to-transparent backdrop-blur-sm rounded-2xl pointer-events-none z-0"></div>
 
@@ -109,33 +110,33 @@ const VerifyAccount = () => {
               <img
                 src={getImageUrl()}
                 alt={getImageAltText()}
-                className="mx-auto mb-1 w-40 h-40 object-contain"
+                className="mx-auto mb-1 max-w-40 max-h-40 object-contain flex-shrink"
               />
 
               <h2 className="text-xl font-semibold text-blue-500 mb-1">
                 {serverResponse.msg}
               </h2>
 
-              <p className="mb-6 text-gray-700">
+              <p className="mb-6 text-gray-700 text-sm">
                 {serverResponse.status === 400
                   ? "The link you clicked has either expired or is invalid."
                   : serverResponse.status >= 500 &&
-                    "An unknown has error occured."}
+                    "An error occured."}
               </p>
 
               <Button
-                className={`inline-block bg-blue-500 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-600 transition ${
+                className={`text-sm inline-block bg-blue-500 text-white font-semibold px-6 py-2 rounded-md shadow hover:bg-blue-600 transition ${
                   isLoading ? "cursor-not-allowed" : "cursor-pointer"
                 }`}
-                onClick={() => {
+                onClick={async () => {
                   serverResponse.status === 200
-                    ? navigate("/dashboard")
-                    : serverResponse.status !== 202 && resendVerification();
+                    ? navigate("/login")
+                    : serverResponse.status === 202 ? navigate("/login") : await resendVerification();
                 }}
                 disabled={isLoading}
               >
                 {serverResponse.status === 200 ? (
-                  "Proceed to Dashboard"
+                  "Proceed to Login"
                 ) : isLoading ? (
                   <LoadingDots />
                 ) : serverResponse.status === 202 ? (

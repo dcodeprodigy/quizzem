@@ -1002,7 +1002,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="px-2 md:px-8 py-2 pb-8">
+        <main className="px-4 md:px-8 py-2 pb-8">
           {isLoading ? (
             <div className="my-4">
               <Skeleton className="w-1/3 h-8 mb-2" />
