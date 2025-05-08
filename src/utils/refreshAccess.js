@@ -3,7 +3,8 @@ axios.defaults.withCredentials = true;
 
 const refreshAccess = async () => {
     try {
-        const response = await axios.post("http://localhost:5000/api/auth/refresh-access");
+        const apiUrl = import.meta.env.VITE_API_URL
+        const response = await axios.post(`${apiUrl}/api/auth/refresh-access`);
             console.log("Refreshed Access Token Success as", response);
             localStorage.setItem("token", response.data.token);
             return true;
