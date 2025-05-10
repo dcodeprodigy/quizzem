@@ -24,7 +24,7 @@ import {
   Settings,
   Trash2,
   UploadCloud,
-  Loader2, 
+  Loader2,
 } from "lucide-react";
 import { User } from "lucide-react";
 import { CircleHelp } from "lucide-react";
@@ -260,7 +260,6 @@ const Dashboard = () => {
   };
 
   const overlayAnimation = (value) => {
-    // Pass this to child components if you need to show or hide overlay animation
     setIsOverlayVisible(value);
   };
 
@@ -757,6 +756,16 @@ const Dashboard = () => {
       );
     } catch (error) {
       const response = error?.response?.data;
+      if (response?.refresh) {
+        const x = await refreshAccess();
+        if (x) {
+          return await handleSubmission(e);
+        } else {
+          ErrorToast("Session expired. Please login to continue.");
+          await Wait();
+          return navigate("/login");
+        }
+      }
       console.error(error);
       ErrorToast(
         response?.msg || response?.msgs[0].msg || error?.message || "An unexpected error occured."
@@ -785,10 +794,13 @@ const Dashboard = () => {
         setIsLoading(false);
       } catch (error) {
         const responseObject = error?.response;
+        if (error?.status === 429) {
+          return ErrorToast("429: Too many requests.");
+        }
         if (!responseObject) {
           /**
            * @todo  show retry button using react hot toast */
-          return ErrorToast("Network Error: Please check your internet connection and reload the page to try again.");
+          return ErrorToast("Network Error: Please check your connection or reload the page to try again.");
         }
 
         if (responseObject?.data?.refresh) {
@@ -933,8 +945,8 @@ const Dashboard = () => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className={`${isLoading
-                            ? "opacity-50"
-                            : "text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500"
+                          ? "opacity-50"
+                          : "text-red-500 flex gap-4 items-center hover:!bg-red-100 hover:!text-red-500"
                           } p-2`} // Added padding
                         disabled={isLoading}
                         onClick={async (e) => {
@@ -1197,8 +1209,8 @@ const Dashboard = () => {
                       {!selectedFile.name && !displayPrevUploaded && (
                         <div
                           className={`relative flex items-center justify-center w-full rounded-lg border-2 border-dashed border-gray-300 transition-all duration-200 mb-6 ${isDragging
-                              ? "border-blue-500 bg-blue-50 scale-105 shadow-inner"
-                              : "bg-white hover:bg-gray-50"
+                            ? "border-blue-500 bg-blue-50 scale-105 shadow-inner"
+                            : "bg-white hover:bg-gray-50"
                             } ${isGenerating ? "cursor-not-allowed bg-gray-100" : ""
                             }`}
                           onDragOver={handleDragOver}
@@ -1281,53 +1293,53 @@ const Dashboard = () => {
                           {selectedFile.name && (
                             <section className="w-full bg-gray-50 py-4 px-4 rounded-md border space-y-3 max-w-full">
                               {/* For the top part */}
-                                <div className="flex justify-between items-center w-full overflow-hidden">
-                                  <div className="flex flex-row items-center gap-3 flex-1 min-w-0 w-[80%] truncate"> 
-                                    <FileText
-                                      className={`${selectedFile.fileIconColor} w-6 flex-shrink-0`}
-                                      size={20}
-                                    />
-                                    <div className="w-full">
-                                      <p className="w-0 text-gray-800 font-medium whitespace-nowrap overflow-ellipsis text-xs sm:text-sm" title={selectedFile.name}>
-                                        {selectedFile.name}
-                                      </p>
-                                      <p className="text-gray-500 text-xs block">
-                                        {selectedFile.size}
-                                      </p>
-                                    </div>
+                              <div className="flex justify-between items-center w-full overflow-hidden">
+                                <div className="flex flex-row items-center gap-3 flex-1 min-w-0 w-[80%] truncate">
+                                  <FileText
+                                    className={`${selectedFile.fileIconColor} w-6 flex-shrink-0`}
+                                    size={20}
+                                  />
+                                  <div className="w-full">
+                                    <p className="w-0 text-gray-800 font-medium whitespace-nowrap overflow-ellipsis text-xs sm:text-sm" title={selectedFile.name}>
+                                      {selectedFile.name}
+                                    </p>
+                                    <p className="text-gray-500 text-xs block">
+                                      {selectedFile.size}
+                                    </p>
                                   </div>
-                                  <Button
-                                    className="h-7 w-7 group hover:bg-red-100 bg-transparent border-none shadow-none align-top rounded-lg p-0 flex-shrink-0 ml-2"
-                                    variant="outline"
-                                    disabled={isGenerating}
-                                    onClick={
-                                      (e) => {
-                                        e.preventDefault();
-                                        if (!isUploading && uploadedFile.id) { // When file is already uploaded and we are not uploading anymore
-                                          clearUpload(e); 
-                                        } else {
-                                          cancelUpload(e); 
-                                        }
+                                </div>
+                                <Button
+                                  className="h-7 w-7 group hover:bg-red-100 bg-transparent border-none shadow-none align-top rounded-lg p-0 flex-shrink-0 ml-2"
+                                  variant="outline"
+                                  disabled={isGenerating}
+                                  onClick={
+                                    (e) => {
+                                      e.preventDefault();
+                                      if (!isUploading && uploadedFile.id) { // When file is already uploaded and we are not uploading anymore
+                                        clearUpload(e);
+                                      } else {
+                                        cancelUpload(e);
                                       }
                                     }
-                                  >
-                                    {!isUploading && uploadedFile.id ? (
-                                      <Trash2
-                                        className="text-gray-500 group-hover:text-red-600"
-                                        size={14}
-                                      />
-                                    ) : (
-                                      <X
-                                        className="text-gray-500 group-hover:text-red-600"
-                                        size={14}
-                                      />
-                                    )}
-                                  </Button>
-                                </div>
-                              
+                                  }
+                                >
+                                  {!isUploading && uploadedFile.id ? (
+                                    <Trash2
+                                      className="text-gray-500 group-hover:text-red-600"
+                                      size={14}
+                                    />
+                                  ) : (
+                                    <X
+                                      className="text-gray-500 group-hover:text-red-600"
+                                      size={14}
+                                    />
+                                  )}
+                                </Button>
+                              </div>
+
                               {uploadedFile.id ? (
                                 <div className="w-full flex items-center gap-2 text-xs sm:text-sm text-green-600">
-                                  <CircleCheck size={13} className="max-[500px]:flex-shrink-0"/>
+                                  <CircleCheck size={13} className="max-[500px]:flex-shrink-0" />
                                   <p className="truncate min-w-0 block whitespace-break-spaces overflow-ellipsis">{selectedFile.name} Uploaded Successfully!</p>
                                 </div>
                               ) : (
@@ -1463,8 +1475,8 @@ const Dashboard = () => {
                         >
                           <ToggleGroupItem
                             className={`transition-all duration-500 text-sm ${difficultyValue == "normal"
-                                ? "!text-blue-600 !bg-blue-200 !border-1 !border-blue-300"
-                                : "text-gray-700 bg-gray-50 border-1"
+                              ? "!text-blue-600 !bg-blue-200 !border-1 !border-blue-300"
+                              : "text-gray-700 bg-gray-50 border-1"
                               }`}
                             value="normal"
                             aria-label="Toggle normal"
@@ -1475,8 +1487,8 @@ const Dashboard = () => {
                             value="hard"
                             aria-label="Toggle hard"
                             className={`transition-all text-sm duration-500 ${difficultyValue == "hard"
-                                ? "!text-red-600 !bg-red-200 !border-1 !border-red-300"
-                                : "text-gray-700 bg-gray-50 border-1"
+                              ? "!text-red-600 !bg-red-200 !border-1 !border-red-300"
+                              : "text-gray-700 bg-gray-50 border-1"
                               }`}
                           >
                             Hard
@@ -1505,8 +1517,8 @@ const Dashboard = () => {
                         >
                           <ToggleGroupItem
                             className={`transition-all duration-500 text-sm ${modeValue == "study"
-                                ? "!text-blue-600 !bg-blue-200 !border-1 !border-blue-300"
-                                : "text-gray-700 bg-gray-50 border-1"
+                              ? "!text-blue-600 !bg-blue-200 !border-1 !border-blue-300"
+                              : "text-gray-700 bg-gray-50 border-1"
                               }`}
                             value="study"
                             aria-label="Toggle study"
@@ -1517,8 +1529,8 @@ const Dashboard = () => {
                             value="exam"
                             aria-label="Toggle hard"
                             className={`transition-all duration-500 text-sm ${modeValue == "exam"
-                                ? "!text-purple-600 !bg-purple-200 !border-1 !border-purple-300"
-                                : "text-gray-700 bg-gray-50 border-1"
+                              ? "!text-purple-600 !bg-purple-200 !border-1 !border-purple-300"
+                              : "text-gray-700 bg-gray-50 border-1"
                               }`}
                           >
                             Exam

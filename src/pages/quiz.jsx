@@ -39,7 +39,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, Send } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDashed, CircleEllipsis, Send } from "lucide-react";
 import { CircleCheck } from "lucide-react";
 import { CircleX } from "lucide-react";
 import { GripVertical } from "lucide-react";
@@ -47,9 +47,12 @@ import refreshAccess from "@/utils/refreshAccess.js";
 import { ErrorToast } from "@/utils/toast.js";
 import LoadingSpinner from "@/components/LoadingSpinner.jsx";
 import { ToastContainer } from "react-toastify";
+import Wait from "@/utils/wait";
 
-const QuizPage = ({ isExam }) => {
+const QuizPage = ({ isExam, hasSessionEnded = false }) => {
   const { id: quizId } = useParams();
+  const [sessionEnded, setSessionEnded] = useState(hasSessionEnded);
+  const [isExamState, setIsExamState] = useState(isExam); // Save to state so changes to it causes re-renders
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [loadingError, setLoadingError] = useState(false);
@@ -62,18 +65,33 @@ const QuizPage = ({ isExam }) => {
   const [scoreCount, setScoreCount] = useState(0);
   const quizCard = useRef(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
-  const { state } = useLocation();
+  const location = useLocation();
+  const state = location?.state;
   const [timeRemaining, setTimeRemaining] = useState(60 * 20);
   const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    // Only set when these guys are not null. Prevents setting them with empty values of the state itself which resets every page reload
-    if (quizData && quizState) {
+    // Only set when these guys are not null. Prevents setting them with empty values of the state itself which resets every page reload.
+    // Also only set if quiz has not ended
+    if (quizData && quizState && !sessionEnded) {
       localStorage.setItem(`${quizId}-data-shuffled`, JSON.stringify(quizData));
       localStorage.setItem(`${quizId}-state`, JSON.stringify(quizState));
       localStorage.setItem(`${quizId}-scoreCount`, scoreCount);
     }
   }, [quizData, quizState]);
+  /**@todo quiz state is being changed. when we fetch answers in exam mode. How do we make sure localStorage Items are cleared and remain cleared when we have fetched answers from backend? Try to explicitly tell user that previous state was found and if they want to continue or start afresh */
+
+  useEffect(() => {
+    /**
+     * @remark The useEffect setting localStorage items resets it when quizData or quizState changes. To counteract this when the user has submitted, we want to reset the items using a hook that runs everytime hasSessionEnded changes, but only results in removal if hasSessionEnded it true
+     */
+    if (sessionEnded) {
+      console.log("Tryna remove state in useEff,: ", `${quizId}-state`);
+      localStorage.removeItem(`${quizId}-state`);
+      localStorage.removeItem(`${quizId}-data-shuffled`);
+      localStorage.removeItem(`${quizId}-scoreCount`);
+    }
+  }, [sessionEnded])
 
   const scrollIntoView = (Elem) => {
     // Scroll an element into view
@@ -84,7 +102,7 @@ const QuizPage = ({ isExam }) => {
   };
 
   const completeScoreSentence = () => {
-    if (isExam) {
+    if (isExamState) {
       const percentageDone = (questionsAnswered / quizState.length) * 100;
       return percentageDone.toFixed(1);
     }
@@ -108,7 +126,7 @@ const QuizPage = ({ isExam }) => {
       <>
         <AlertDialog>
           <AlertDialogTrigger
-            disabled={isRequesting}
+            disabled={isRequesting || sessionEnded}
             className={`md:!py-2 md:!px-8 !px-2.5 not-disabled:cursor-pointer rounded-md text-sm font-medium text-center shadow-xs ${currentQuestion === quizData.questions.length &&
               "!bg-red-600 disabled:!bg-red-200 !text-white"
               }`}
@@ -145,7 +163,7 @@ const QuizPage = ({ isExam }) => {
   const endQuiz = async () => {
     // show loading animation
     // send request to save user score
-    const mode = isExam ? "exam" : "study";
+    const mode = isExam ? "exam" : "study"; // Always use the original param for getting the mode when sending requests. It is never changed and holds the value that the server recognizes.
     try {
       const response = await axios.post(
         `${apiUrl}/api/me/quiz/submit/${mode}`,
@@ -160,16 +178,20 @@ const QuizPage = ({ isExam }) => {
         }
       );
 
-      if (isExam) {
+      if (isExamState) { // Running submission after first submission will cause the page to act like it is in study mode and then navigate to dashboard.
         //Replace the QuizState with the server response after scoring
         setQuizState(prevState => prevState = response.data);
-        localStorage.removeItem(`${quizId}-state`);
-        localStorage.removeItem(`${quizId}-data-shuffled`);
-        localStorage.removeItem(`${quizId}-scoreCount`);
+        setIsExamState(false); // Changes the state to study mode so that user can view results like it is in study form, + easily ask follow-up questions. 
+        // Calculate and Set Score
+        let score = 0;
+        response.data.forEach(item => {
+          item.isCorrect && score++;
+        });
+        setScoreCount(score);
+        setSessionEnded(true)
       } else {
-        localStorage.removeItem(`${quizId}-state`);
-        localStorage.removeItem(`${quizId}-data-shuffled`);
-        localStorage.removeItem(`${quizId}-scoreCount`);
+        setSessionEnded(true)
+        await Wait(1500);
         navigate("/dashboard");
       }
     } catch (error) {
@@ -187,8 +209,6 @@ const QuizPage = ({ isExam }) => {
     } finally {
       setIsLoading(false);
     }
-
-    // navigate to dashboard page, with newly fetched dashboard data loaded
   };
 
   const nextQuestion = (increment) => {
@@ -201,7 +221,7 @@ const QuizPage = ({ isExam }) => {
     /**
      * @remark User can only check answer in study mode
      */
-    if (!isExam) {
+    if (!isExamState) {
       setDisableButtons(true);
       setIsRequesting(true);
 
@@ -608,7 +628,7 @@ const QuizPage = ({ isExam }) => {
           localStorage.setItem(`${quizId}-state`, JSON.stringify(quizState));
         }
         // check how many questions user has answered
-        isExam ? calculateQA(localQuizState) : undefined;
+        isExamState ? calculateQA(localQuizState) : undefined;
       } catch (error) {
         console.error(error);
         setLoadingError(true);
@@ -625,7 +645,7 @@ const QuizPage = ({ isExam }) => {
       ) : (
         <>
           <div className="min-h-screen pb-24 bg-gray-50">
-            <div className="w-full shadow-sm py-4 px-4 sm:px-8 bg-white">
+            <div className="w-full shadow-sm py-4 px-4 sm:px-8 sticky top-0 left-0 right-0 z-50 backdrop-blur-sm bg-white/80">
               <header className="container m-auto grid grid-cols-2 items-center text-slate-500">
                 {isLoading ? (
                   <Skeleton className="w-[150px] sm:w-[200px] h-[32px]" />
@@ -648,7 +668,7 @@ const QuizPage = ({ isExam }) => {
                       <Button
                         variant="secondary"
                         className="text-red-500 px-2 py-1 sm:px-3 sm:py-2 cursor-pointer text-xs sm:text-sm"
-                        disabled={isLoading || isRequesting}
+                        disabled={isLoading || isRequesting || sessionEnded}
                         onClick={async () => {
                           setIsRequesting(true);
                           await endQuiz();
@@ -658,7 +678,7 @@ const QuizPage = ({ isExam }) => {
                         {isRequesting ? (
                           <LoadingSpinner size={16} />
                         ) : (
-                          <>End {isExam ? "Exam" : "Quiz"}</>
+                          <>End {isExamState ? "Exam" : "Quiz"}</>
                         )}
                       </Button>
                       {/* Optionally hide email on mobile */}
@@ -688,7 +708,7 @@ const QuizPage = ({ isExam }) => {
               </header>
             </div>
 
-            <main className="container m-auto px-3 md:px-4">
+            <main className="container m-auto px-4 md:px-4">
               {isLoading ? (
                 <div className="grid md:grid-cols-[2fr_1fr] gap-3 md:gap-8 mt-5 animate-pulse">
                   {/* LHS Skeleton */}
@@ -712,14 +732,14 @@ const QuizPage = ({ isExam }) => {
                       </CardContent>
                     </Card>
 
-                    {!isExam && (
+                    {!isExamState && (
                       <div className="flex items-center my-6 space-x-2">
                         <Skeleton className="w-12 h-6 rounded-full" />
                         <Skeleton className="h-5 w-24 rounded" />
                       </div>
                     )}
 
-                    {!isExam && <Skeleton className="hidden sm:block h-px w-full my-6 bg-gray-200 rounded" />}
+                    {!isExamState && <Skeleton className="hidden sm:block h-px w-full my-6 bg-gray-200 rounded" />}
 
                     <div className="flex justify-between items-center bg-gray-100 md:bg-transparent fixed bottom-0 left-0 w-full px-3 py-3 shadow-2xl md:relative md:shadow-none md:mt-6 z-50 border-t md:border-none">
                       <Skeleton className="h-10 w-10 md:px-12 md:w-auto md:py-2 rounded" />
@@ -748,16 +768,18 @@ const QuizPage = ({ isExam }) => {
                 </div>
               ) : (
                 <>
-                  <div className="grid md:grid-cols-[2fr_1fr] gap-3 md:gap-8 mt-5">
+                    <div ref={quizCard} className="h-[35px]">
+                    </div>
+                  <div className="grid md:grid-cols-[2fr_1fr] gap-3 md:gap-8">
                     {/* Quiz answering section (LHS)  */}
-                    <section ref={quizCard} className="">
-                      <div className="mb-6">
-                        <h1 className="text-2xl font-medium text-gray-900 my-2 md:mt-0">
-                          {quizData.title || "Untitled Quiz"}
+                    <section className="">
+                      <div className="mb-6 px-0 sm:px-0">
+                        <h1 className="text-xl font-medium text-gray-900 my-2 md:mt-0">
+                          {quizData?.title || "Untitled Quiz"}
                         </h1>
                         <Progress
                           value={(currentQuestion / quizState.length) * 100} // Calculate the percentage
-                          className="bg-blue-100"
+                          className="bg-blue-100 h-2"
                         />
                       </div>
                       <Card className="rounded-2xl py-8">
@@ -808,7 +830,7 @@ const QuizPage = ({ isExam }) => {
                       )}
 
                       {/* Switch Section for Ask AI */}
-                      {!isExam && (
+                      {!isExamState && (
                         <div className="flex items-center my-6 space-x-2">
                           <Switch
                             id="ask-ai"
@@ -891,7 +913,7 @@ const QuizPage = ({ isExam }) => {
                           </motion.div>
                         )}
 
-                      {!isExam && <Separator className="hidden sm:block" />}
+                      {!isExamState && <Separator className="hidden sm:block" />}
 
                       {/* Mobile Switch for Questions */}
                       <div className="flex justify-between bg-white fixed bottom-0 left-0 w-full px-3 py-3 shadow-2xl md:bg-transparent md:relative md:shadow-none z-50 ">
@@ -919,7 +941,7 @@ const QuizPage = ({ isExam }) => {
 
                         {/* Check Answer */}
                         {!quizState[currentQuestion - 1].correctAnswer &&
-                          !isExam ? (
+                          !isExamState ? (
                           <Button
                             className="bg-blue-600 not-disabled:cursor-pointer hover:bg-blue-600/90 transition-all duration-500 hover:text-white"
                             disabled={
@@ -1004,14 +1026,14 @@ const QuizPage = ({ isExam }) => {
                       <CardHeader className="flex flex-col justify-center items-center p-4 bg-blue-50 border border-blue-200 rounded-lg text-center gap-1">
                         <CardTitle className="text-3xl font-bold text-blue-700">
                           {/* This should display the number of questions answered when in exam mode */}
-                          {isExam
+                          {isExamState
                             ? `${questionsAnswered}/${quizState.length}`
                             : calculatePercentCorrect()}
                         </CardTitle>
                         <CardDescription className="text-sm text-gray-600">
-                          {isExam
+                          {isExamState
                             ? `You are ${completeScoreSentence()}% complete`
-                            : `You got ${scoreCount} answer${scoreCount > 1 ? "s" : ""
+                            : `You got ${scoreCount} question${scoreCount > 1 ? "s" : ""
                             } correct`}
                         </CardDescription>
                       </CardHeader>
@@ -1030,10 +1052,11 @@ const QuizPage = ({ isExam }) => {
                                   scrollIntoView(quizCard);
                                 }}
                                 className={`flex gap-3 !py-5 w-full justify-start items-center bg-white text-gray-700 shadow-none hover:bg-gray-50 transition-all duration-500 ${currentQuestion === index + 1 &&
-                                  "text-blue-700 bg-blue-100 border-1 border-blue-300 pointer-events-none"
+                                  "text-blue-700 bg-blue-100 border-1 border-blue-300 hover:bg-blue-100 pointer-events-none"
                                   }`}
                               >
                                 {!questionState.correctAnswer ? (
+                                  questionState.selectedAnswer ? <CircleDashed className="text-blue-500/90"/> :
                                   <GripVertical className="text-gray-500" />
                                 ) : questionState.isCorrect ? (
                                   <CircleCheck
