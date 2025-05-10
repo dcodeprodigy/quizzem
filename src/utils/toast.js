@@ -9,7 +9,7 @@ import { toast, Flip } from "react-toastify";
  * @param {string} msg - The message to be displayed
  * @param {toastId} toastId - Identifies a toast for future updates. Returned when display() is called
  * @param {string} status - 'success' or 'error'. Set when trying to upload already existing loading toast
- * @function This does not use an arrow function because that does will not have the arguments variable
+ * @function LoadingToast does not use an arrow function because that does will not have the arguments variable
  */
 export const LoadingToast = function (msg, toastId, status) {
     /**
@@ -40,7 +40,6 @@ export const LoadingToast = function (msg, toastId, status) {
     });
   };
 
-  console.log(arguments.length)
   if (arguments.length === 1) {
     /**
      * @returns {Id} Toast Id

@@ -19,28 +19,29 @@ import refreshAccess from "@/utils/refreshAccess.js";
 import { ErrorToast } from "@/utils/toast.js";
 import OverlayAnimation from "./OverlayAnimation.jsx";
 import axios from "axios";
+import Wait from "@/utils/wait.js";
 
 
 const fetchQuizForRetake = async (quizId, navigate) => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/me/quiz/retake/${quizId}`, {
+     const apiUrl = import.meta.VITE_API_URL
+    const response = await axios.get(`${apiUrl}/api/me/quiz/retake/${quizId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
+    console.log(response, "quizdata")
     const quizData = response.data
     navigate(`${quizData.mode === "exam" ? `/quiz/e/${quizData.quizId}` : `/quiz/s/${quizData.quizId}`}`, {state: quizData});
   } catch (error) {
-    
     if (error?.response?.data?.refresh) {
       const x = await refreshAccess();
       if (x) {
         return await fetchQuizForRetake(quizId, navigate);
       } else {
-        await new Promise((resolve) =>
-          resolve(setTimeout(ErrorToast("Session expired.")), 2500)
-        );
-        navigate("/login");
+        ErrorToast("Session expired.");
+        await Wait();
+        return navigate("/login");
       }
     }
     ErrorToast(error?.response?.data?.msg || error?.message || "An error occurred.")

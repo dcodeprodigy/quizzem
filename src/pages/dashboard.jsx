@@ -24,6 +24,7 @@ import {
   Settings,
   Trash2,
   UploadCloud,
+  Loader2, 
 } from "lucide-react";
 import { User } from "lucide-react";
 import { CircleHelp } from "lucide-react";
@@ -143,16 +144,16 @@ const PreviouslyUploaded = ({ ...props }) => {
                     props.setUserEndPage(upload.range.end);
                   }}
                 >
-                  <div className="flex-1 flex gap-2 items-center min-w-0 truncate">
+                  <div className="flex-1 flex gap-2 items-center min-w-0"> {/* Ensured min-w-0 for flex child */}
                     <FileText
                       className={`${props.getfileIconColor(
                         upload.fileName
                       )} w-6 flex-shrink-0`}
                       size={20}
                     />
-
-                    {/* Helps to be responsive and introduces the elipsis. if inline-block is inline-flex instead, ellipsis fails - inline-block truncate flex-grow w-[0px] overflow-hidden text-ellipsis whitespace-nowrap */}
-                    <Label className="inline-block truncate flex-grow w-[0px] overflow-hidden text-ellipsis whitespace-nowrap font-normal text-xs sm:text-sm text-gray-800 text-left">
+                    {/* The user's original classes here were good for truncation within a flex item.
+                        `inline-block` for Label, `truncate`, `flex-grow`, `w-[0px]` (basis 0) */}
+                    <Label className="inline-block truncate flex-grow w-[0px] font-normal text-xs sm:text-sm text-gray-800 text-left">
                       {upload.fileName}
                     </Label>
                   </div>
@@ -310,15 +311,13 @@ const Dashboard = () => {
 
     if (type === "start") {
       newStart = Math.min(Math.max(numericValue, serverMin), serverMax - 1);
-      // Auto-adjust end if needed using the newStart value
-      if (newEnd <= newStart) {
-        newEnd = Math.min(newStart + 1, serverMax);
-      }
+      // if (newEnd <= newStart) {
+      //   newEnd = Math.min(newStart + 1, serverMax);
+      // }
     } else {
       // Use the current state's start to compute, but since we calculate newStart above,
-      // in practice, this should reference the latest value
       const currentStart = type === "end" ? userStartPage : newStart;
-      newEnd = Math.min(Math.max(numericValue, currentStart + 1), serverMax);
+      // newEnd = Math.min(Math.max(numericValue, currentStart + 1), serverMax);
     }
 
     // Determine errors based on the input vs the clamped values
@@ -579,19 +578,16 @@ const Dashboard = () => {
     const socket = socketRef.current; // Local variable for easier access;
 
     socket.on("connect", () => {
-      console.log("Connected to WebSocket server with ID: ", socket.id);
       setSocketId(socket.id);
       setStatus("idle"); // Now ready to receive files for upload
     });
 
     socket.on("disconnect", (reason) => {
-      console.log("Disconnected from WebSocket server: ", reason);
       setSocketId(null);
       setStatus("disconnected"); // No need showing an error here. Generally when user tries to upload and status == disconnected or error, trigger the error message.
     });
 
     socket.on("connect_error", (err) => {
-      console.error("WebSocket connection error: ", err);
       setSocketId(null);
       setStatus("error");
       setErrorMsg("Cannot connect to server.");
@@ -608,7 +604,6 @@ const Dashboard = () => {
     });
 
     socket.on("uploadStatus", (data) => {
-      console.log("Received status update: ", data);
       setStatus(data.status); // This could be 'parsing file', 'success', 'error'
 
       if (data.status === "success") {
@@ -630,7 +625,6 @@ const Dashboard = () => {
 
       // --- Cleanup on component unmount ---
       return () => {
-        console.log("Disconnecting socket...");
         socket.disconnect();
         socketRef.current = null;
         setSocketId(null);
@@ -765,7 +759,7 @@ const Dashboard = () => {
       const response = error?.response?.data;
       console.error(error);
       ErrorToast(
-        response?.msg || error?.message || "An unexpected error occured."
+        response?.msg || response?.msgs[0].msg || error?.message || "An unexpected error occured."
       );
     } finally {
       setIsGenerating(false);
@@ -818,9 +812,8 @@ const Dashboard = () => {
           console.log("Error fetching data: ", responseObject);
           ErrorToast(responseObject?.data.msg);
           localStorage.clear();
-          localStorage.removeItem("token");
           await Wait();
-          navigate("/login");
+          return navigate("/login");
         }
       }
     };
@@ -1286,36 +1279,36 @@ const Dashboard = () => {
        */}
                           {/* Make sure to clear the state for this to be cleared on error */}
                           {selectedFile.name && (
-                            <section className="bg-gray-50 py-4 px-4 rounded-md border space-y-3 max-w-full">
+                            <section className="w-full bg-gray-50 py-4 px-4 rounded-md border space-y-3 max-w-full">
                               {/* For the top part */}
-
-                                <div className="flex justify-between items-start w-full overflow-hidden truncate">
-                                  <div className="flex flex-row items-center justify-center gap-3 max-w-full truncate">
+                                <div className="flex justify-between items-center w-full overflow-hidden">
+                                  <div className="flex flex-row items-center gap-3 flex-1 min-w-0 w-[80%] truncate"> 
                                     <FileText
                                       className={`${selectedFile.fileIconColor} w-6 flex-shrink-0`}
                                       size={20}
                                     />
-                                    <div className="!max-w-full whitespace-nowrap flex-1 flex truncate items-start justify-center flex-col">
-                                      <span className="text-gray-800 font-medium inline-block truncate flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-xs sm:text-smn w-0">
+                                    <div className="w-full">
+                                      <p className="w-0 text-gray-800 font-medium whitespace-nowrap overflow-ellipsis text-xs sm:text-sm" title={selectedFile.name}>
                                         {selectedFile.name}
-                                      </span>
-                                      <span className="text-gray-500 text-xs inline-block">
+                                      </p>
+                                      <p className="text-gray-500 text-xs block">
                                         {selectedFile.size}
-                                      </span>
+                                      </p>
                                     </div>
                                   </div>
                                   <Button
-                                    className="h-7 w-7 group hover:bg-red-100 bg-transparent border-none shadow-none align-top rounded-lg p-0 flex-shrink-0"
+                                    className="h-7 w-7 group hover:bg-red-100 bg-transparent border-none shadow-none align-top rounded-lg p-0 flex-shrink-0 ml-2"
                                     variant="outline"
                                     disabled={isGenerating}
                                     onClick={
                                       (e) => {
                                         e.preventDefault();
-                                        !isUploading && uploadedFile.id // When file is already uploaded and we are not uploading anymore
-                                        ? (e) => clearUpload(e) // helps cancel upload when <Trash2/>
-                                        : (e) => cancelUpload(e) // helps clear uploaded when <X/>
+                                        if (!isUploading && uploadedFile.id) { // When file is already uploaded and we are not uploading anymore
+                                          clearUpload(e); 
+                                        } else {
+                                          cancelUpload(e); 
+                                        }
                                       }
-                                      
                                     }
                                   >
                                     {!isUploading && uploadedFile.id ? (
@@ -1331,11 +1324,11 @@ const Dashboard = () => {
                                     )}
                                   </Button>
                                 </div>
-                              {/* </div> */}
+                              
                               {uploadedFile.id ? (
-                                <div className="flex items-center gap-2 text-xs sm:text-sm text-green-600">
+                                <div className="w-full flex items-center gap-2 text-xs sm:text-sm text-green-600">
                                   <CircleCheck size={13} className="max-[500px]:flex-shrink-0"/>
-                                  {selectedFile.name} Uploaded Successfully!
+                                  <p className="truncate min-w-0 block whitespace-break-spaces overflow-ellipsis">{selectedFile.name} Uploaded Successfully!</p>
                                 </div>
                               ) : (
                                 <div className="flex justify-center items-center gap-3 my-4">

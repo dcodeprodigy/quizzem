@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import axios from "axios";
 import AppLogo from "@/components/AppLogo.jsx";
-import { UserProvider } from "../../context/user";
+import { UserProvider } from "../context/user";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Card,
@@ -71,7 +71,7 @@ const QuizPage = ({ isExam }) => {
     if (quizData && quizState) {
       localStorage.setItem(`${quizId}-data-shuffled`, JSON.stringify(quizData));
       localStorage.setItem(`${quizId}-state`, JSON.stringify(quizState));
-      localStorage.setItem("scoreCount", scoreCount);
+      localStorage.setItem(`${quizId}-scoreCount`, scoreCount);
     }
   }, [quizData, quizState]);
 
@@ -91,10 +91,11 @@ const QuizPage = ({ isExam }) => {
   };
 
   const calculateQA = (data) => {
-    console.log("data", data);
     // On Mount, run this function, just in case the user is trying to continue a quiz
-    data.questions.map((question) => {
-      question.selectedAnswer && setQuestionsAnswered(questionsAnswered + 1);
+    data?.forEach((question) => {
+      question.selectedAnswer ? setQuestionsAnswered(prev =>
+        prev + 1
+      ) : null;
     });
   };
 
@@ -107,6 +108,7 @@ const QuizPage = ({ isExam }) => {
       <>
         <AlertDialog>
           <AlertDialogTrigger
+            disabled={isRequesting}
             className={`md:!py-2 md:!px-8 !px-2.5 not-disabled:cursor-pointer rounded-md text-sm font-medium text-center shadow-xs ${currentQuestion === quizData.questions.length &&
               "!bg-red-600 disabled:!bg-red-200 !text-white"
               }`}
@@ -122,13 +124,16 @@ const QuizPage = ({ isExam }) => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel disabled={isRequesting}>Cancel</AlertDialogCancel>
               <AlertDialogAction
+                disabled={isRequesting}
                 onClick={async () => {
+                  setIsRequesting(true);
                   await endQuiz();
+                  setIsRequesting(false);
                 }}
               >
-                End
+                {isRequesting ? <LoadingSpinner size={16} /> : "End"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -156,14 +161,15 @@ const QuizPage = ({ isExam }) => {
       );
 
       if (isExam) {
-        // Set new quizState that shall be returned from backend
-        setQuizState((prevState) => {
-          prevState = response.data;
-        });
+        //Replace the QuizState with the server response after scoring
+        setQuizState(prevState => prevState = response.data);
+        localStorage.removeItem(`${quizId}-state`);
+        localStorage.removeItem(`${quizId}-data-shuffled`);
+        localStorage.removeItem(`${quizId}-scoreCount`);
       } else {
         localStorage.removeItem(`${quizId}-state`);
         localStorage.removeItem(`${quizId}-data-shuffled`);
-        localStorage.removeItem("scoreCount");
+        localStorage.removeItem(`${quizId}-scoreCount`);
         navigate("/dashboard");
       }
     } catch (error) {
@@ -355,10 +361,9 @@ const QuizPage = ({ isExam }) => {
               isRequesting === false
               ? () => {
                 // This means only run this onClick function when we are not requesting and there is no correctAnswer in state
-
                 // Update questions answered state before updating selectedAnswer
                 !quizState[currentQuestion - 1].selectedAnswer &&
-                  setQuestionsAnswered(questionsAnswered + 1);
+                  setQuestionsAnswered(prev => prev + 1);
 
                 // Set as selected answer in state
                 setQuizState((prevQuizState) => {
@@ -378,7 +383,7 @@ const QuizPage = ({ isExam }) => {
           }
         >
           {/* This div shows the option letter and option */}
-          <div className="flex gap-3 items-center ">
+          <div className="flex gap-3 items-center">
             <span
               // In this classnames we used isCorrect === false and not !isCorrect because a var may be falsy but not false
               className={`w-7 h-7 p-3 flex items-center justify-center text-sm rounded-full border-2 border-gray-400 font-medium ${quizState[currentQuestion - 1]?.selectedAnswer === option &&
@@ -510,20 +515,23 @@ const QuizPage = ({ isExam }) => {
         const localQuizData = JSON.parse(
           localStorage.getItem(`${quizId}-data-shuffled`)
         );
-        const score = Number(localStorage.getItem("scoreCount"))
+        const score = Number(localStorage.getItem(`${quizId}-scoreCount`));
+
+        // If there is localQuizData and state, set QuizData to them
         if (localQuizState && localQuizData) {
           /**
            * @todo Prompt user that previous state was found. Do you want to restore it?
            */
           setQuizState(localQuizState);
           setQuizData(localQuizData);
+          console.log("Data", localQuizData);
           setScoreCount(score);
         }
 
         if (!state && !localQuizData && !localQuizState) {
           try {
             const quizReq = await axios.get(
-              `${apiUrl}/api/me/quizzes/${quizId}`,
+              `${apiUrl}/api/me/quiz/retake/${quizId}`,
               {
                 timeout: 30 * 1000,
                 headers: {
@@ -546,14 +554,14 @@ const QuizPage = ({ isExam }) => {
             }
             throw error;
           }
-        } else {
+        } else { // If there is a state and localdata, prefer the localdata
           quizData = localQuizData ? localQuizData : state;
         }
 
         if (!localQuizData && !localQuizState) {
-          // shuffle options
+          // shuffle options only when there is no local data
           const shuffledQuestionOptions = quizData.questions.map((question) => {
-            const shuffledOptions = shuffleArray(question.options); // shuffle options
+            const shuffledOptions = shuffleArray(question.options);
             return {
               ...question,
               options: shuffledOptions,
@@ -579,7 +587,7 @@ const QuizPage = ({ isExam }) => {
         setIsLoading(false);
 
         if (!localQuizState) {
-          // Update Questions State
+          // Update Questions State only on initial fetch where quisState does not exist
           const initialQuizState = Array.from(
             { length: quizData.questions.length },
             (_, index) => ({
@@ -600,7 +608,7 @@ const QuizPage = ({ isExam }) => {
           localStorage.setItem(`${quizId}-state`, JSON.stringify(quizState));
         }
         // check how many questions user has answered
-        isExam ? calculateQA(quizData) : undefined;
+        isExam ? calculateQA(localQuizState) : undefined;
       } catch (error) {
         console.error(error);
         setLoadingError(true);
@@ -682,7 +690,62 @@ const QuizPage = ({ isExam }) => {
 
             <main className="container m-auto px-3 md:px-4">
               {isLoading ? (
-                "Loading Skeleton"
+                <div className="grid md:grid-cols-[2fr_1fr] gap-3 md:gap-8 mt-5 animate-pulse">
+                  {/* LHS Skeleton */}
+                  <section>
+                    {/* Quiz Title and Progress Bar Skeleton */}
+                    <div className="mb-6">
+                      <Skeleton className="h-8 w-3/4 my-2 md:mt-0 rounded" />
+                      <Skeleton className="h-4 w-full rounded" />
+                    </div>
+                    {/* Question Card Skeleton */}
+                    <Card className="rounded-2xl py-8">
+                      <CardHeader>
+                        <Skeleton className="h-6 w-1/4 mb-2 rounded" /> {/* Question X */}
+                        <Skeleton className="h-5 w-full mb-1 rounded" /> {/* Question text line 1 */}
+                        <Skeleton className="h-5 w-3/4 rounded" />    {/* Question text line 2 */}
+                      </CardHeader>
+                      <CardContent className="text-gray-800 font-normal space-y-3">
+                        {[...Array(4)].map((_, i) => (
+                          <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    {!isExam && (
+                      <div className="flex items-center my-6 space-x-2">
+                        <Skeleton className="w-12 h-6 rounded-full" />
+                        <Skeleton className="h-5 w-24 rounded" />
+                      </div>
+                    )}
+
+                    {!isExam && <Skeleton className="hidden sm:block h-px w-full my-6 bg-gray-200 rounded" />}
+
+                    <div className="flex justify-between items-center bg-gray-100 md:bg-transparent fixed bottom-0 left-0 w-full px-3 py-3 shadow-2xl md:relative md:shadow-none md:mt-6 z-50 border-t md:border-none">
+                      <Skeleton className="h-10 w-10 md:px-12 md:w-auto md:py-2 rounded" />
+                      <Skeleton className="h-10 w-28 md:w-36 rounded" />
+                      <Skeleton className="h-10 w-10 md:px-12 md:w-auto md:py-2 rounded" />
+                    </div>
+                  </section>
+
+                  {/* RHS Skeleton (Question Jump List) */}
+                  <Card className="p-5 md:sticky md:top-0 h-[90vh]">
+                    <CardHeader className="flex flex-col justify-center items-center p-4 bg-blue-50 border border-blue-200 rounded-lg text-center gap-1">
+                      <Skeleton className="h-8 w-1/2 mb-1 rounded" />
+                      <Skeleton className="h-4 w-3/4 rounded" />
+                    </CardHeader>
+                    <CardContent className="p-0 mt-4 overflow-y-auto relative">
+                      <div className="sticky top-0 bg-white pb-2 pt-1">
+                        <Skeleton className="h-5 w-1/3 mb-2 rounded" />
+                      </div>
+                      <div className="flex flex-col gap-2 mt-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Skeleton key={`skel-q-${i}`} className="h-12 w-full rounded-md" />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               ) : (
                 <>
                   <div className="grid md:grid-cols-[2fr_1fr] gap-3 md:gap-8 mt-5">
@@ -868,7 +931,7 @@ const QuizPage = ({ isExam }) => {
                             onClick={checkAnswer}
                           >
                             {isRequesting ? (
-                              <LoadingDots className="px-4" />
+                              <LoadingSpinner size={16} />
                             ) : (
                               "Check Answer"
                             )}
