@@ -48,6 +48,7 @@ import { ErrorToast } from "@/utils/toast.js";
 import LoadingSpinner from "@/components/LoadingSpinner.jsx";
 import { ToastContainer } from "react-toastify";
 import Wait from "@/utils/wait";
+import { Helmet } from "react-helmet-async";
 
 const QuizPage = ({ isExam, hasSessionEnded = false }) => {
   const { id: quizId } = useParams();
@@ -640,6 +641,9 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
 
   return (
     <>
+    <Helmet>
+      <title>{quizData?.title || "Untitled"}</title>
+    </Helmet>
       {loadingError ? (
         <LoadingError />
       ) : (
