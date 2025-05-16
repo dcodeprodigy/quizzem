@@ -97,7 +97,7 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
 
   /**
    * 
-   * @param {React Element Reference} Elem - The Element you want the page to scroll to
+   * @param {Element} Elem - The Element you want the page to scroll to
    */
   const scrollIntoView = (Elem) => {
     if (!Elem) return;
@@ -297,7 +297,10 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
           quizState[currentQuestion - 1].selectedAnswer &&
           setScoreCount((prevScore) => prevScore + 1);
 
-        // Save current state to localStorage
+        // Save current state to localStorage - Done by a useEffect hook? Not sure but it saves anyway
+
+        // Scroll to explanation
+        scrollIntoView(explanationSection);
       } catch (error) {
         const responseObject = error.response;
 
@@ -325,8 +328,6 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
       } finally {
         setDisableButtons(false);
         setIsRequesting(false);
-        // Scroll to explanation
-        scrollIntoView(explanationSection)
 
       }
     }
