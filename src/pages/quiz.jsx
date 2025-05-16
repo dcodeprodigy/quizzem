@@ -960,7 +960,7 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
                         {!quizState[currentQuestion - 1].correctAnswer &&
                           !isExamState ? (
                           <Button
-                            className={`bg-blue-600 not-disabled:cursor-pointer hover:bg-blue-600/90 transition-all duration-500 hover:text-white ${isRequesting && "px-5"}`}
+                            className={`bg-blue-600 not-disabled:cursor-pointer hover:bg-blue-600/90 transition-all duration-500 hover:text-white`}
                             disabled={
                               quizState[currentQuestion - 1].correctAnswer
                                 ? true
@@ -970,7 +970,7 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
                             onClick={checkAnswer}
                           >
                             {isRequesting ? (
-                              <LoadingSpinner size={16} />
+                              <LoadingSpinner size={16} borderColor="#F2F2F2" />
                             ) : (
                               "Check Answer"
                             )}

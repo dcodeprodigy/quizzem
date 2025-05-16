@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 const spinAnimationName = 'spinner-spin-jsx'; // Unique name for this component's keyframes
 const keyframesStyleId = 'spinner-keyframes-style'; // ID for the injected style tag
 
-function LoadingSpinner({ size = 40 }) {
+function LoadingSpinner({ size = 40, borderColor = "rgba(0, 0, 0, 0.1)" }) {
   // Inject keyframes into the document head if they don't exist
   useEffect(() => {
     // Check if the style tag already exists
@@ -35,7 +35,7 @@ function LoadingSpinner({ size = 40 }) {
     display: 'inline-block',
     width: `${size}px`,
     height: `${size}px`,
-    border: `${borderThickness}px solid rgba(0, 0, 0, 0.1)`,
+    border: `${borderThickness}px solid ${borderColor}`,
     borderTopColor: '#1447e6', // Theme color
     borderRadius: '50%',
     animation: `${spinAnimationName} 2s linear infinite`, 
