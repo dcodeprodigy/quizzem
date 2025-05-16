@@ -95,7 +95,12 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
     }
   }, [sessionEnded])
 
+  /**
+   * 
+   * @param {React Element Reference} Elem - The Element you want the page to scroll to
+   */
   const scrollIntoView = (Elem) => {
+    if (!Elem) return;
     // Scroll an element into view
     Elem.current.scrollIntoView({
       behavior: "smooth",
@@ -321,7 +326,7 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
         setDisableButtons(false);
         setIsRequesting(false);
         // Scroll to explanation
-        scrollIntoView()
+        scrollIntoView(explanationSection)
 
       }
     }
