@@ -98,13 +98,14 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
   /**
    * 
    * @param {Element} Elem - The Element you want the page to scroll to
+   * @param {String} block - where on the viewport should the element be scrolled to. Defaults to start of viewport if none is specified
    */
-  const scrollIntoView = (Elem) => {
+  const scrollIntoView = (Elem, block = "start") => {
     if (!Elem) return;
     // Scroll an element into view
     Elem.current.scrollIntoView({
       behavior: "smooth",
-      block: "start",
+      block: block,
     });
   };
 
@@ -300,7 +301,8 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
         // Save current state to localStorage - Done by a useEffect hook? Not sure but it saves anyway
 
         // Scroll to explanation
-        scrollIntoView(explanationSection);
+        await Wait(500); // Wait for the ref to be updated
+        scrollIntoView(explanationSection, "center");
       } catch (error) {
         const responseObject = error.response;
 
@@ -818,12 +820,12 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
 
                       {quizState[currentQuestion - 1].correctAnswer && (
                         <motion.div
-                          ref={explanationSection}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3 }}
                         >
                           <Card
+                            ref={explanationSection}
                             className={`mt-5 flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-l-4 text-sm ${quizState[currentQuestion - 1].isCorrect
                               ? "bg-green-50 border-green-500"
                               : "bg-red-50 border-red-500 "
