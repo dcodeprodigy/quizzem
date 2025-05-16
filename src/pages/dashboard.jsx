@@ -486,8 +486,6 @@ const Dashboard = () => {
             },
           });
 
-          // We rely on Socket IO for status. We are using main axios response for fatal HTTP errors.
-          if (response.status >= 200 && response.status < 300) {
             const result = await response.data;
             console.log("Final HTTP Response Body: ", result);
 
@@ -512,14 +510,6 @@ const Dashboard = () => {
               fileSize: result.fileSize,
             };
             setPrevUploads((prev) => [...prev, newItem]);
-          } else {
-            // On FATAL ERROR
-            console.log("Upload failed FATALLY!");
-            ErrorToast(
-              response.data.msg ||
-              "Error uploading file. Make sure you are connected to the internet."
-            );
-          }
         } catch (error) {
           console.log(error);
           if (error?.response?.data?.refresh) {
@@ -536,7 +526,7 @@ const Dashboard = () => {
 
           resetFile(); // reset selected
 
-          console.log("x", prevUploads, displayPrevUploaded, triedToGetUploads);
+          // console.log("x", prevUploads, displayPrevUploaded, triedToGetUploads);
           // Set error message
           setErrorMsg(
             error?.response?.data?.msg ||

@@ -53,6 +53,7 @@ import { Helmet } from "react-helmet-async";
 const QuizPage = ({ isExam, hasSessionEnded = false }) => {
   const { id: quizId } = useParams();
   const [sessionEnded, setSessionEnded] = useState(hasSessionEnded);
+  const explanationSection = useRef(null);
   const [isExamState, setIsExamState] = useState(isExam); // Save to state so changes to it causes re-renders
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -319,6 +320,9 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
       } finally {
         setDisableButtons(false);
         setIsRequesting(false);
+        // Scroll to explanation
+        scrollIntoView()
+
       }
     }
   };
@@ -808,6 +812,7 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
 
                       {quizState[currentQuestion - 1].correctAnswer && (
                         <motion.div
+                          ref={explanationSection}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3 }}
@@ -947,7 +952,7 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
                         {!quizState[currentQuestion - 1].correctAnswer &&
                           !isExamState ? (
                           <Button
-                            className="bg-blue-600 not-disabled:cursor-pointer hover:bg-blue-600/90 transition-all duration-500 hover:text-white"
+                            className={`bg-blue-600 not-disabled:cursor-pointer hover:bg-blue-600/90 transition-all duration-500 hover:text-white ${isRequesting && "px-5"}`}
                             disabled={
                               quizState[currentQuestion - 1].correctAnswer
                                 ? true
