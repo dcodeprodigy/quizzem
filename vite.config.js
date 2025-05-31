@@ -8,9 +8,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
     minify: 'esbuild',
-    esbuild: {
-      drop: ['console', 'debugger'],
-    },
+  },
+  esbuild: {
+    drop: ['console', 'debugger']
   },
   resolve: {
     alias: {
