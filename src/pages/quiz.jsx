@@ -254,7 +254,7 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
         const questionId = quizState[currentQuestion - 1].questionId;
         const selectedAnswer = quizState[currentQuestion - 1].selectedAnswer;
         const response = await axios.post(
-          `${apiUrl}/api/me/quiz/s/answer/${questionId}`,
+          `${apiUrl}/api/me/quiz/s/answer`, // Adding quizId to the url is not needed since we are sending the questionId and selectedAnswer in the body. Not adding questionId here also helps eliminate preflight checks on every single question answer check
           {
             quizId,
             questionId,
