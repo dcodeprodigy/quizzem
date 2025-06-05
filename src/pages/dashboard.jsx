@@ -2,7 +2,6 @@ import React, { useRef } from "react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { io } from "socket.io-client";
 import AppLogo from "@/components/AppLogo.jsx";
 import NoSavedQuiz from "@/components/NoSavedQuiz.jsx";
 import NoQuizHistory from "@/components/NoQuizHistory.jsx";
@@ -236,12 +235,8 @@ const Dashboard = () => {
   const [minMaxError, setMinMaxError] = useState("");
   const additionalInfo = useRef(null);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  const controller = new AbortController();
   const apiUrl = import.meta.env.VITE_API_URL;
-
-  // Use useRef to hold the socket instance
-  // This avoids re-renders causing socket re-connections unnecessarily
-  const socketRef = useRef(null);
-  const [socketId, setSocketId] = useState(null);
 
   // |-- Helper function for updating Upload Text and classnames--|
   const handleUploadTextClass = () => {
@@ -480,9 +475,17 @@ const Dashboard = () => {
         try {
           const token = localStorage.getItem("token");
           const response = await axios.post(`${apiUrl}/api/upload`, formData, {
+            onUploadProgress: (progressEvent) => {
+              console.log(formatBytes(progressEvent.loaded))
+              const percentUploaded = Math.round(progressEvent.loaded/file.size) * 100;
+              if (percentUploaded >= 99) {
+                setStatus("parsing file");
+              }
+              setProgress(percentUploaded);
+            },
+            signal: controller.signal,
             headers: {
               Authorization: `Bearer ${token}`,
-              "X-Socket-ID": socketId,
             },
           });
 
@@ -500,6 +503,7 @@ const Dashboard = () => {
                 end: result.range.end,
               },
             }));
+
             setUserStartPage(result.range.start);
             setUserEndPage(result.range.end);
             // Push newly uploaded file to previous uploads
@@ -526,14 +530,13 @@ const Dashboard = () => {
 
           resetFile(); // reset selected
 
-          // console.log("x", prevUploads, displayPrevUploaded, triedToGetUploads);
-          // Set error message
+          
           setErrorMsg(
-            error?.response?.data?.msg ||
+            error?.response?.data?.msg || error?.message ||
             "Error:  Unable to upload selected file."
           );
           ErrorToast(
-            error?.response?.data?.msg ||
+            error?.response?.data?.msg ||  error?.message || 
             "Error:  Unable to upload selected file."
           );
         } finally {
@@ -545,7 +548,15 @@ const Dashboard = () => {
     }
   };
 
-  const cancelUpload = async () => { };
+  const cancelUpload = () => {
+      controller.abort();
+      setIsUploading(false);
+      setProgress(0);
+      setStatus("idle");
+      setErrorMsg("");
+      resetFile(); // Reset selected file and uploaded file state
+      InfoToast("Cancelled file upload.")
+   };
 
   const clearUpload = (e) => {
     e.preventDefault();
@@ -553,73 +564,6 @@ const Dashboard = () => {
     // clear selected files and uploaded files state
     resetFile();
   };
-
-  useEffect(() => {
-    // --- Establish SocketIO Connection on Page Mount ---
-    // Disconnect previous socket if it exists when component unmounts or re-renders
-    if (socketRef.current) {
-      // Using socketRef here because it does not cause a re-render automatically. So, we can connect to socket without any re-renders
-      socketRef.current.disconnect();
-    }
-
-    setStatus("connecting");
-    socketRef.current = io(`${apiUrl}`, {});
-    const socket = socketRef.current; // Local variable for easier access;
-
-    socket.on("connect", () => {
-      setSocketId(socket.id);
-      setStatus("idle"); // Now ready to receive files for upload
-    });
-
-    socket.on("disconnect", (reason) => {
-      setSocketId(null);
-      setStatus("disconnected"); // No need showing an error here. Generally when user tries to upload and status == disconnected or error, trigger the error message.
-    });
-
-    socket.on("connect_error", (err) => {
-      setSocketId(null);
-      setStatus("error");
-      setErrorMsg("Cannot connect to server.");
-    });
-
-    // --- Listen for Server Events ---
-    socket.on("uploadProgress", (data) => {
-      setProgress(data.progress);
-
-      if (status !== "parsing file") {
-        // Don't overwrite "parsing file" status
-        setStatus("uploading");
-      }
-    });
-
-    socket.on("uploadStatus", (data) => {
-      setStatus(data.status); // This could be 'parsing file', 'success', 'error'
-
-      if (data.status === "success") {
-        /**
-         * @description Sets file upload status
-         */
-        setUploadedFile((prev) => ({
-          ...prev,
-          name: selectedFile.name,
-          status: true,
-          id: data.fileId,
-        }));
-        setProgress(100); // Ensure progress hits 100% on success
-      }
-      if (data.status === "error") {
-        setErrorMsg(data.msg || "An unknown error occurred.");
-        setProgress(0); // Reset progress on error
-      }
-
-      // --- Cleanup on component unmount ---
-      return () => {
-        socket.disconnect();
-        socketRef.current = null;
-        setSocketId(null);
-      };
-    });
-  }, []);
 
   const setfileIconColor = (x) => {
     switch (x) {
@@ -1301,14 +1245,17 @@ const Dashboard = () => {
                                 <Button
                                   className="h-7 w-7 group hover:bg-red-100 bg-transparent border-none shadow-none align-top rounded-lg p-0 flex-shrink-0 ml-2"
                                   variant="outline"
-                                  disabled={isGenerating}
+                                  disabled={isGenerating || progress >= 99}
                                   onClick={
                                     (e) => {
                                       e.preventDefault();
                                       if (!isUploading && uploadedFile.id) { // When file is already uploaded and we are not uploading anymore
                                         clearUpload(e);
                                       } else {
-                                        cancelUpload(e);
+                                        if (progress >= 99) {
+                                          return
+                                        } 
+                                        cancelUpload();
                                       }
                                     }
                                   }
