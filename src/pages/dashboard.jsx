@@ -477,7 +477,7 @@ const Dashboard = () => {
           const response = await axios.post(`${apiUrl}/api/upload`, formData, {
             onUploadProgress: (progressEvent) => {
               console.log(formatBytes(progressEvent.loaded))
-              const percentUploaded = Math.round(progressEvent.loaded/file.size) * 100;
+              const percentUploaded = Math.round((progressEvent.loaded/file.size) * 100);
               if (percentUploaded >= 99) {
                 setStatus("parsing file");
               }
