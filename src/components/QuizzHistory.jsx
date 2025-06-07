@@ -58,6 +58,17 @@ const MapQuizHistory = ({ showfullHist, dashboardData, overlayAnimation, isLoadi
   const navigate = useNavigate();
   const [isLoadingPrev, setIsLoadingPrev] = useState(false);
 
+
+  const checkIfSaved = (quiz) => {
+    const savedState = localStorage.getItem(`${quiz.quizId}-state`);
+    const savedScore = localStorage.getItem(`${quiz.quizId}-scoreCount`);
+    const shuffledQuestions = localStorage.getItem(`${quiz.quizId}-data-shuffled`);
+    if (savedState && savedScore && shuffledQuestions) {
+      return true;
+    }
+    return false;
+  }
+
   const Content = ({ quiz }) => {
     const date = new Date(quiz?.updatedAt);
     const formattedDate = date?.toLocaleString('en-NG', { day: 'numeric', month: 'numeric', year: 'numeric' });
@@ -82,6 +93,10 @@ const MapQuizHistory = ({ showfullHist, dashboardData, overlayAnimation, isLoadi
             value={quiz.quizId}
             onClick={async (e) => {
               setIsLoadingPrev(prev => prev = true);
+              if (isLoading) {
+                ErrorToast("Please wait for the current operation to finish.");
+                return;
+              };
               setOverlay(true);
               console.log(e.target.value);
               await fetchQuizForRetake(e.target.value, navigate);
@@ -89,7 +104,7 @@ const MapQuizHistory = ({ showfullHist, dashboardData, overlayAnimation, isLoadi
               setIsLoadingPrev(false);
             }}
           >
-            <RefreshCw /> Retake Quiz
+            <RefreshCw /> ${checkIfSaved() ? "Continue Quiz" : "Retake Quiz"}
           </Button>
           <Separator orientation="vertical" />
           <div className="flex justify-end lg:justify-between w-full items-center gap-2 mt-2.5 sm:mt-0">
