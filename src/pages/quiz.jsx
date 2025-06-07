@@ -49,6 +49,7 @@ import LoadingSpinner from "@/components/LoadingSpinner.jsx";
 import { ToastContainer } from "react-toastify";
 import Wait from "@/utils/wait";
 import { Helmet } from "react-helmet-async";
+import { refreshDCache, refreshQuizDCache } from "@/utils/refreshCache";
 
 const QuizPage = ({ isExam, hasSessionEnded = false }) => {
   const { id: quizId } = useParams();
@@ -66,7 +67,7 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
   const [disableButtons, setDisableButtons] = useState(true);
   const [scoreCount, setScoreCount] = useState(0);
   const quizCard = useRef(null);
-  const questionCard =  useRef(null);
+  const questionCard = useRef(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [copied, setCopied] = useState(false);
   const location = useLocation();
@@ -616,8 +617,14 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
           JSON.stringify(quizData)
         );
 
-        const userData = await getUser();
-        setDashboardData(userData);
+        const fetchNewData = refreshQuizDCache(); // Checks if we should fetch new data or use localStorage data
+        if (fetchNewData) {
+          const userData = await getUser();
+          setDashboardData(userData);
+        } else {
+          const localData = localStorage.getItem('dashboardData');
+          setDashboardData(JSON.parse(localData));
+        }
 
         setIsLoading(false);
 
@@ -655,9 +662,9 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
 
   return (
     <>
-    <Helmet>
-      <title>{quizData?.title || "Untitled"}</title>
-    </Helmet>
+      <Helmet>
+        <title>{quizData?.title || "Untitled"}</title>
+      </Helmet>
       {loadingError ? (
         <LoadingError />
       ) : (
@@ -786,8 +793,8 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
                 </div>
               ) : (
                 <>
-                    <div ref={quizCard} className="h-[35px]">
-                    </div>
+                  <div ref={quizCard} className="h-[35px]">
+                  </div>
                   <div className="grid md:grid-cols-[2fr_1fr] gap-3 md:gap-8">
                     {/* Quiz answering section (LHS)  */}
                     <section className="">
@@ -818,8 +825,8 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
                                     })
                                   }
                                 }
-                              }/>}
-                              
+                              } />}
+
 
                             </p>
                             <p className="text-gray-700 font-medium">
@@ -1091,8 +1098,8 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
                                   }`}
                               >
                                 {!questionState.correctAnswer ? (
-                                  questionState.selectedAnswer ? <CircleDashed className="text-blue-500/90"/> :
-                                  <GripVertical className="text-gray-500" />
+                                  questionState.selectedAnswer ? <CircleDashed className="text-blue-500/90" /> :
+                                    <GripVertical className="text-gray-500" />
                                 ) : questionState.isCorrect ? (
                                   <CircleCheck
                                     size={14}

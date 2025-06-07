@@ -68,6 +68,7 @@ import {
 } from "@/utils/toast";
 import OverlayAnimation from "@/components/OverlayAnimation";
 import Wait from "@/utils/wait";
+import { refreshDCache } from "@/utils/refreshCache";
 
 const WelcomeMsg = ({ dashboardData }) => {
   return (
@@ -766,12 +767,10 @@ const Dashboard = () => {
       }
     };
 
-    // Below code is needed to avoid fetching too much dashboardData
-    // Essentially, it checks if user is refreshing the page or is coming from directly typed link without a document.referrer
-    // If the user is coming from a link that is not the current page or login page, we do not fetch fresh data
-    // Only in these instances shall we try to fetch a fresh dashboard data
+    
+    const fetchNewData = refreshDCache() 
     // Otherwise, we use data in localStorage
-    if (document.referrer === `${window.location}` || !document.referrer || document.referrer === `${APP_URL}/login`) {
+    if (fetchNewData) {
       fetchData();
     } else {
       const localData = localStorage.getItem('dashboardData');
