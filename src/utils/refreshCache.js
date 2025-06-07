@@ -1,3 +1,5 @@
+const APP_URL = import.meta.env.VITE_APP_URL;
+
 /**
  * 
  * @returns `true` if to refresh dashboard data
@@ -6,7 +8,8 @@
     If the user is coming from a link that is not the current page or login page, we do not fetch fresh data.
  */
 export const refreshDCache = () => {
-    if (document.referrer === `${window.location}` || !document.referrer || document.referrer === `${APP_URL}/login`) {
+    console.log("this is ref", document.referrer)
+    if (!document.referrer || document.referrer === `${APP_URL}/login`) {
         return true
     } else {
         return false
@@ -19,7 +22,9 @@ export const refreshDCache = () => {
  * @description This function does not allow new fetches when the quiz page is refreshed. There is really no need fetching new dashboardData here
  */
 export const refreshQuizDCache = () => {
-    if (document.referrer !== `${window.location}` || !document.referrer || document.referrer === `${APP_URL}/login`) {
+    if (document.referrer === `${APP_URL}/login`) {
+        console.log("returning true")
+        console.log(typeof document.referrer)
         return true
     } else {
         return false

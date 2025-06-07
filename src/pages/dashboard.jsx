@@ -237,7 +237,6 @@ const Dashboard = () => {
   const additionalInfo = useRef(null);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
   const controller = new AbortController();
-  const APP_URL = import.meta.env.VITE_APP_URL; // Base URL of the app, used for navigation and redirects
   const apiUrl = import.meta.env.VITE_API_URL;
 
   // |-- Helper function for updating Upload Text and classnames--|
