@@ -39,7 +39,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, CircleDashed, CircleEllipsis, Send } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDashed, CircleEllipsis, Copy, Send, Check } from "lucide-react";
 import { CircleCheck } from "lucide-react";
 import { CircleX } from "lucide-react";
 import { GripVertical } from "lucide-react";
@@ -66,7 +66,9 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
   const [disableButtons, setDisableButtons] = useState(true);
   const [scoreCount, setScoreCount] = useState(0);
   const quizCard = useRef(null);
+  const questionCard =  useRef(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [copied, setCopied] = useState(false);
   const location = useLocation();
   const state = location?.state;
   const [timeRemaining, setTimeRemaining] = useState(60 * 20);
@@ -798,11 +800,27 @@ const QuizPage = ({ isExam, hasSessionEnded = false }) => {
                           className="bg-blue-100 h-2"
                         />
                       </div>
-                      <Card className="rounded-2xl py-8">
+                      <Card className="rounded-2xl py-8" ref={questionCard}>
                         <CardHeader>
                           <CardTitle className="flex flex-col gap-1 text-base sm:text-lg ">
-                            <p className="text-gray-900">
-                              Question {currentQuestion}
+                            <p className="text-gray-900 flex justify-between items-center">
+                              <span>Question {currentQuestion}</span>
+                              {copied ? <Check className="text-green-500" size={16} /> : <Copy size={16} className="cursor-pointer" onClick={
+                                () => {
+                                  if (questionCard) {
+                                    const innerText = questionCard.current.innerText;
+                                    navigator.clipboard.writeText(
+                                      innerText
+                                    );
+                                    setCopied(true);
+                                    Wait().then(() => {
+                                      setCopied(false);
+                                    })
+                                  }
+                                }
+                              }/>}
+                              
+
                             </p>
                             <p className="text-gray-700 font-medium">
                               {

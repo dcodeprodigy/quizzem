@@ -236,6 +236,7 @@ const Dashboard = () => {
   const additionalInfo = useRef(null);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
   const controller = new AbortController();
+  const APP_URL = import.meta.env.VITE_APP_URL; // Base URL of the app, used for navigation and redirects
   const apiUrl = import.meta.env.VITE_API_URL;
 
   // |-- Helper function for updating Upload Text and classnames--|
@@ -723,6 +724,7 @@ const Dashboard = () => {
         });
         // Set Dashboard Data
         setDashboardData(response.data);
+        localStorage.setItem('dashboardData', JSON.stringify(response.data));
         // Now that data is available, calc average score color
         getAvScoreColor(response.data);
         setIsLoading(false);
@@ -734,7 +736,7 @@ const Dashboard = () => {
         if (!responseObject) {
           /**
            * @todo  show retry button using react hot toast */
-          return ErrorToast("Network Error: Please check your connection or reload the page to try again.");
+          return ErrorToast("Connection Problem. Please try again later.");
         }
 
         if (responseObject?.data?.refresh) {
@@ -764,7 +766,17 @@ const Dashboard = () => {
       }
     };
 
-    fetchData();
+    // Below code is needed to avoid fetching too much dashboardData
+    // Essentially, it checks if user is refreshing the page or is coming from directly typed link without a document.referrer
+    // If the user is coming from a link that is not the current page or login page, we do not fetch fresh data
+    // Only in these instances shall we try to fetch a fresh dashboard data
+    // Otherwise, we use data in localStorage
+    if (document.referrer === `${window.location}` || !document.referrer || document.referrer === `${APP_URL}/login`) {
+      fetchData();
+    } else {
+      const localData = localStorage.getItem('dashboardData');
+      setDashboardData(JSON.parse(localData));
+    }
   }, []);
 
   return (

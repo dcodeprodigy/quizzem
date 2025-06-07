@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import evalScoreColor from "@/utils/evaluateScoreColor.js";
 import NoQuizHistory from "./NoQuizHistory.jsx";
 import refreshAccess from "@/utils/refreshAccess.js";
-import { ErrorToast } from "@/utils/toast.js";
+import { ErrorToast, InfoToast } from "@/utils/toast.js";
 import ToolTip from "@/components/AddedInfo";
 import OverlayAnimation from "./OverlayAnimation.jsx";
 import axios from "axios";
@@ -60,9 +60,9 @@ const MapQuizHistory = ({ showfullHist, dashboardData, overlayAnimation, isLoadi
 
 
   const checkIfSaved = (quiz) => {
-    const savedState = localStorage.getItem(`${quiz.quizId}-state`);
-    const savedScore = localStorage.getItem(`${quiz.quizId}-scoreCount`);
-    const shuffledQuestions = localStorage.getItem(`${quiz.quizId}-data-shuffled`);
+    const savedState = localStorage.getItem(`${quiz?.quizId}-state`);
+    const savedScore = localStorage.getItem(`${quiz?.quizId}-scoreCount`);
+    const shuffledQuestions = localStorage.getItem(`${quiz?.quizId}-data-shuffled`);
     if (savedState && savedScore && shuffledQuestions) {
       return true;
     }
@@ -94,7 +94,7 @@ const MapQuizHistory = ({ showfullHist, dashboardData, overlayAnimation, isLoadi
             onClick={async (e) => {
               setIsLoadingPrev(prev => prev = true);
               if (isLoading) {
-                ErrorToast("Please wait for the current operation to finish.");
+                InfoToast("Please wait for the current operation to finish.");
                 return;
               };
               setOverlay(true);
@@ -104,7 +104,7 @@ const MapQuizHistory = ({ showfullHist, dashboardData, overlayAnimation, isLoadi
               setIsLoadingPrev(false);
             }}
           >
-            <RefreshCw /> ${checkIfSaved() ? "Continue Quiz" : "Retake Quiz"}
+            <RefreshCw /> {checkIfSaved(quiz) ? "Continue Quiz" : "Retake Quiz"}
           </Button>
           <Separator orientation="vertical" />
           <div className="flex justify-end lg:justify-between w-full items-center gap-2 mt-2.5 sm:mt-0">
@@ -114,7 +114,7 @@ const MapQuizHistory = ({ showfullHist, dashboardData, overlayAnimation, isLoadi
               name="failed-only"
               disabled
               aria-disabled
-              className="flex justif items-center text-gray-500 text-xs font-normal py-1 cursor-pointer whitespace-nowrap"
+              className="flex items-center text-gray-500 text-xs font-normal py-1 cursor-pointer whitespace-nowrap"
             >
               <span className="mr-2">Failed Only</span>
               <ToolTip
